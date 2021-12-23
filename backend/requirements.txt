@@ -1,0 +1,7 @@
+flask
+spotipy
+numpy
+pandas
+keras
+scikit-learn
+tensorflow

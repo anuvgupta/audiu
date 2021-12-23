@@ -1,0 +1,38 @@
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <script>
+            $(document).ready(_ => {
+                $("#go").click(_ => {
+                    var good_id = $("#good")[0].value;
+                    var bad_id = $("#bad")[0].value;
+
+                    var src_id = $("#source")[0].value;
+
+                    $.ajax({
+                        url: 'model',
+                        method:"POST",
+                        data: {
+                            good_id: good_id,
+                            bad_id: bad_id,
+                            src_id: src_id
+                        },
+                        success: (data) => {
+                            console.log(data)
+                            $("#output").html(`${data}`);
+                        }
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        Good: <input id="good"/><br/>
+        Bad: <input id="bad"/><br/>
+        Source: <input id="source"/><br/>
+        <br/><br/>
+        <button id="go">Go</button>
+
+        <pre id="output">song list</pre>
+    </body>
+</html>
