@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:300italic,600italic,300,400,500,600');
+@import url('https://fonts.googleapis.com/css?family=Barlow:300italic,600italic,300,400,500,600');
+
+body {
+    text-align: center;
+    /* background-color: #f9f9f9; */
+    background-color: #202020;
+}
+* {
+    font-family: 'Source Sans Pro', Trebuchet, Verdana, Helvetica, Arial, sans-serif;
+}
+
+a {
+    color: rgba(10, 115, 242, 0.95);
+    transition: color 0.1s ease;
+    text-decoration: none;
+    cursor: pointer;
+}
+a:hover {
+    color: rgba(10, 115, 242, 0.75);
+    text-decoration: none;
+    cursor: pointer;
+}

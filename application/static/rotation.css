@@ -1,0 +1,143 @@
+@-webkit-keyframes rotating {
+    from {
+        -webkit-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes rotating {
+    from {
+        -ms-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -webkit-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -ms-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -webkit-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes rotating_n {
+    from {
+        -webkit-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(-360deg);
+        -o-transform: rotate(-360deg);
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes rotating_n {
+    from {
+        -ms-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -webkit-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -ms-transform: rotate(-360deg);
+        -moz-transform: rotate(-360deg);
+        -webkit-transform: rotate(-360deg);
+        -o-transform: rotate(-360deg);
+        transform: rotate(-360deg);
+    }
+}
+
+.rotating4 {
+    -webkit-animation: rotating 4s linear infinite;
+    -moz-animation: rotating 4s linear infinite;
+    -ms-animation: rotating 4s linear infinite;
+    -o-animation: rotating 4s linear infinite;
+    animation: rotating 4s linear infinite;
+}
+
+.rotating4_n {
+    -webkit-animation: rotating_n 4s linear infinite;
+    -moz-animation: rotating_n 4s linear infinite;
+    -ms-animation: rotating_n 4s linear infinite;
+    -o-animation: rotating_n 4s linear infinite;
+    animation: rotating_n 4s linear infinite;
+}
+
+.rotating5 {
+    -webkit-animation: rotating 5s linear infinite;
+    -moz-animation: rotating 5s linear infinite;
+    -ms-animation: rotating 5s linear infinite;
+    -o-animation: rotating 5s linear infinite;
+    animation: rotating 5s linear infinite;
+}
+
+.rotating5_n {
+    -webkit-animation: rotating_n 5s linear infinite;
+    -moz-animation: rotating_n 5s linear infinite;
+    -ms-animation: rotating_n 5s linear infinite;
+    -o-animation: rotating_n 5s linear infinite;
+    animation: rotating_n 5s linear infinite;
+}
+
+.rotating6 {
+    -webkit-animation: rotating 6s linear infinite;
+    -moz-animation: rotating 6s linear infinite;
+    -ms-animation: rotating 6s linear infinite;
+    -o-animation: rotating 6s linear infinite;
+    animation: rotating 6s linear infinite;
+}
+
+.rotating6_n {
+    -webkit-animation: rotating_n 6s linear infinite;
+    -moz-animation: rotating_n 6s linear infinite;
+    -ms-animation: rotating_n 6s linear infinite;
+    -o-animation: rotating_n 6s linear infinite;
+    animation: rotating_n 6s linear infinite;
+}
+
+.rotating7 {
+    -webkit-animation: rotating 7s linear infinite;
+    -moz-animation: rotating 7s linear infinite;
+    -ms-animation: rotating 7s linear infinite;
+    -o-animation: rotating 7s linear infinite;
+    animation: rotating 7s linear infinite;
+}
+
+.rotating7_n {
+    -webkit-animation: rotating_n 7s linear infinite;
+    -moz-animation: rotating_n 7s linear infinite;
+    -ms-animation: rotating_n 7s linear infinite;
+    -o-animation: rotating_n 7s linear infinite;
+    animation: rotating_n 7s linear infinite;
+}
+
+.rotating8 {
+    -webkit-animation: rotating 8s linear infinite;
+    -moz-animation: rotating 8s linear infinite;
+    -ms-animation: rotating 8s linear infinite;
+    -o-animation: rotating 8s linear infinite;
+    animation: rotating 8s linear infinite;
+}
+
+.rotating8_n {
+    -webkit-animation: rotating_n 8s linear infinite;
+    -moz-animation: rotating_n 8s linear infinite;
+    -ms-animation: rotating_n 8s linear infinite;
+    -o-animation: rotating_n 8s linear infinite;
+    animation: rotating_n 8s linear infinite;
+}
