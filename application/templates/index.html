@@ -1,38 +1,59 @@
-<html>
-    <head>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-        <script>
-            $(document).ready(_ => {
-                $("#go").click(_ => {
-                    var good_id = $("#good")[0].value;
-                    var bad_id = $("#bad")[0].value;
+<!DOCTYPE html>
+<html lang="en">
 
-                    var src_id = $("#source")[0].value;
+<head>
+    <title>AudiU</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.9" />
+    <link rel="icon" href="img/waveform_w.png" />
+    <script type="text/javascript" src="lib/jquery-3.5.1.min.js"></script>
+    <script type="text/javascript" src="lib/material.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/bootbox-5.5.2.min.js"></script>
+    <script type="text/javascript" src="lib/block.js"></script>
+    <script type="text/javascript" src="lib/util.js"></script>
+    <script type="text/javascript" src="app.js"></script>
+    <link rel="stylesheet" href="lib/bootstrap.min.css" />
+    <link rel="stylesheet" href="lib/material.min.css" />
+    <link rel="stylesheet" href="rotation.css" />
+    <link rel="stylesheet" href="style.css" />
+    <!-- <script type="text/javascript">
+        app.main.config = <% - True %>;
+    </script> -->
+</head>
 
-                    $.ajax({
-                        url: 'model',
-                        method:"POST",
-                        data: {
-                            good_id: good_id,
-                            bad_id: bad_id,
-                            src_id: src_id
-                        },
-                        success: (data) => {
-                            console.log(data)
-                            $("#output").html(`${data}`);
-                        }
-                    });
-                });
-            });
-        </script>
-    </head>
-    <body>
-        Good: <input id="good"/><br/>
-        Bad: <input id="bad"/><br/>
-        Source: <input id="source"/><br/>
-        <br/><br/>
-        <button id="go">Go</button>
+<body>
+    <!-- audiu -->
+    <div id="loading" style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: table;
+                text-align: center;
+                opacity: 1;
+                transition: opacity 0.1s ease;
+            ">
+        <div style="
+                    display: table-cell;
+                    vertical-align: middle;
+                    margin: 0 auto;
+                ">
+            <!-- <img src="img/loading_gear.svg" id="loadingimg" style="
+                        width: 45%;
+                        max-width: 75px;
+                        opacity: 0.8;
+                        transition: opacity 0.5s ease;
+                    " /> -->
+                <img src="img/waveform_w.png" id="loadingimg" class="rotating4_n" style="
+                                        width: 25%;
+                                        max-width: 35px;
+                                        opacity: 0.7;
+                                        transition: opacity 0.5s ease;
+                                    " />
+        </div>
+    </div>
+</body>
 
-        <pre id="output">song list</pre>
-    </body>
 </html>
