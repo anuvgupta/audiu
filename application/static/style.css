@@ -1,10 +1,15 @@
 @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:300italic,600italic,300,400,500,600');
 @import url('https://fonts.googleapis.com/css?family=Barlow:300italic,600italic,300,400,500,600');
 
+@font-face {
+    font-family: Blackpast;
+    src: url(font/Blackpast.ttf);
+}
+
 body {
     text-align: center;
     /* background-color: #f9f9f9; */
-    background-color: #202020;
+    background-color: #1b1b1b;
 }
 * {
     font-family: 'Source Sans Pro', Trebuchet, Verdana, Helvetica, Arial, sans-serif;
@@ -20,4 +25,27 @@ a:hover {
     color: rgba(10, 115, 242, 0.75);
     text-decoration: none;
     cursor: pointer;
+}
+
+span.stretch {
+    display: inline-block;
+    -webkit-transform: scale(1, 1.08);
+    -moz-transform: scale(1, 1.08);
+    -ms-transform: scale(1, 1.08);
+    -o-transform: scale(1, 1.08);
+    transform: scale(1, 1.08);
+}
+
+input.playlist-input {
+    padding: 10px 20px;
+    font-size: 25px;
+    display: block;
+    margin: 20px auto;
+    max-width: 600px;
+    width: 85%;
+    background-color: #222;
+    border-radius: 3px;
+    border: 2px solid #333;
+    color: white;
+    outline: none;
 }

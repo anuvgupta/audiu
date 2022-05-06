@@ -36,7 +36,7 @@ class Backend():
         else:
             return flask.jsonify({
                 'success': True,
-                'message': 'Recommendations generated!',
+                'message': 'Recommendations generated.',
                 'data': {
                     'a': request_json.get('a'),
                     'c': request_json.get('c'),
