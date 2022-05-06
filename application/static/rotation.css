@@ -62,6 +62,22 @@
     }
 }
 
+.rotating1 {
+    -webkit-animation: rotating 1s linear infinite;
+    -moz-animation: rotating 1s linear infinite;
+    -ms-animation: rotating 1s linear infinite;
+    -o-animation: rotating 1s linear infinite;
+    animation: rotating 1s linear infinite;
+}
+
+.rotating1_n {
+    -webkit-animation: rotating_n 1s linear infinite;
+    -moz-animation: rotating_n 1s linear infinite;
+    -ms-animation: rotating_n 1s linear infinite;
+    -o-animation: rotating_n 1s linear infinite;
+    animation: rotating_n 1s linear infinite;
+}
+
 .rotating4 {
     -webkit-animation: rotating 4s linear infinite;
     -moz-animation: rotating 4s linear infinite;

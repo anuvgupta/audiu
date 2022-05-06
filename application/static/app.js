@@ -83,9 +83,10 @@ var app = {
             setTimeout((_) => {
                 app.ui.block.css("opacity", "1");
                 app.ui.block.on("ready");
-                // setTimeout(_ => {
-                //     window.componentHandler.upgradeDom();
-                // }, 100);
+                setTimeout(_ => {
+                    // enable ripple effect on material-ui buttons after generated and injected by block.js
+                    window.componentHandler.upgradeDom();
+                }, 100);
             }, 100);
             setTimeout((_) => {
                 Block.queries();
