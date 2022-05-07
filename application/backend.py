@@ -1,32 +1,16 @@
 import os
 import json
 import flask
-import asyncio
 import waitress
-import websockets
 import multiprocessing
 
+# local imports
+import sockets
 
+DATASET = 'dataset.json'
 HOST = '0.0.0.0'
 PORT = 8001
 PROD = True
-
-## WEBSOCKET SERVER ##
-# socket server start
-def socket_run(production='False', host='localhost', port='3000', signal_queue=None):
-    port = int(port)
-    production = bool(production)
-    # socket server event handler
-    async def socket_handler(websocket):
-        async for message in websocket:
-            print("[ws] socket received: {}".format(message))
-            # await websocket.send(message)  # echo server
-    # socket server event loop
-    async def socket_serve(host, port):
-        async with websockets.serve(socket_handler, host, port):
-            await asyncio.Future()  # run forever
-    # socket server start
-    asyncio.run(socket_serve(host, port))
 
 ## BACKEND WRAPPER ##
 # web & websocket wrapper class
@@ -72,16 +56,8 @@ class Backend():
             playlists = dataset_json['playlists']
             genres = dataset_json['genres']
 
-        print(playlists)
-        print(genres)
-
-
-    ## WEBSOCKET SERVER ##
-    # websocket send
-    def socket_send(self, message):
-        # not implemented yet
-        # use self.socket_signal_queue to send data to websocket client
-        pass
+        # print(playlists)
+        # print(genres)
 
 
     ## WEB SERVER ##
@@ -128,7 +104,7 @@ class Backend():
     def run_forever(self, production=False):
         self.socket_signal_queue = multiprocessing.Queue(10)
         self.socket_process = multiprocessing.Process(
-            target=socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
+            target=sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
         self.socket_process.start()
         self.web_run(str(production))
         self.socket_process.join()
@@ -136,7 +112,7 @@ class Backend():
 
 # backend test main entry point
 def main():
-    Backend('static', 'templates', HOST, PORT, PORT + 1, 'dataset.json').run_forever(PROD)
+    Backend('static', 'templates', HOST, PORT, PORT + 1, DATASET).run_forever(PROD)
 
 # thread entry point
 if __name__ == "__main__":
