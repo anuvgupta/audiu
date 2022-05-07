@@ -1,6 +1,8 @@
 /* AUDIU */
 // web client
 
+const ws_debug_port = 8002;
+
 var app = {
     ui: {
         block: null,
@@ -117,6 +119,51 @@ var app = {
             });
         },
     },
+    ws: {
+        id: 0,
+        socket: null,
+        url:
+            (location.protocol === 'https:' ? 'wss://' : 'ws://') + document.domain +
+            (document.domain == 'localhost' ? `:${ws_debug_port}` : ((location.protocol === 'https:' ? ':443' : ':80') + '/socket')),
+        connect: callback => {
+            var socket = new WebSocket(app.ws.url);
+            socket.addEventListener('open', e => {
+                console.log('[ws] socket connected');
+                callback();
+            });
+            socket.addEventListener('error', e => {
+                console.log('[ws] socket error ', e.data);
+            });
+            socket.addEventListener('message', e => {
+                var d = e.data;
+                if (d != null) {
+                    console.log(`[ws] socket received: ${d}`);
+                    // var data = {};
+                    // data[d.event] = d.data;
+                    // app.ui.block.data(data);
+                } else {
+                    console.log('[ws] socket received:', 'invalid message', e.data);
+                }
+            });
+            socket.addEventListener('close', e => {
+                console.log('[ws] socket disconnected');
+                app.ui.display_modal.disconnected();
+            });
+            window.addEventListener('beforeunload', e => {
+                // socket.close(1001);
+            });
+            app.ws.socket = socket;
+        },
+        send: (data) => {
+            console.log('[ws] sending:', data);
+            app.ws.socket.send(data);
+        },
+        api: {
+            send_message: (msg) => {
+                app.ws.send(msg);
+            }
+        }
+    },
     main: {
         config: {},
         init: (_) => {
@@ -129,9 +176,12 @@ var app = {
                         app.ui.block.load(
                             (_) => {
                                 console.log("[main] blocks loaded");
-                                app.ui.init((_) => {
-                                    console.log("[main] ready");
-                                    setTimeout(app.main.test, app.main.test_delay);
+                                console.log("[main] socket connecting");
+                                app.ws.connect(_ => {
+                                    app.ui.init((_) => {
+                                        console.log("[main] ready");
+                                        setTimeout(app.main.test, app.main.test_delay);
+                                    });
                                 });
                             },
                             "app",

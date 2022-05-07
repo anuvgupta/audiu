@@ -9,7 +9,7 @@
 body {
     text-align: center;
     /* background-color: #f9f9f9; */
-    background-color: #1b1b1b;
+    background-color: #171717;
 }
 * {
     font-family: 'Barlow', 'Source Sans Pro', Trebuchet, Verdana, Helvetica, Arial, sans-serif;
@@ -48,4 +48,12 @@ input.playlist-input {
     border: 2px solid #333;
     color: white;
     outline: none;
+}
+
+div.bootbox.modal {
+    text-align: left;
+}
+
+.bootbox-confirm div div div button.btn-primary {
+    background-color: #555
 }
