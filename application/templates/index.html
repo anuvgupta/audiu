@@ -17,9 +17,9 @@
     <link rel="stylesheet" href="lib/material.min.css" />
     <link rel="stylesheet" href="rotation.css" />
     <link rel="stylesheet" href="style.css" />
-    <!-- <script type="text/javascript">
-        app.main.config = <% - True %>;
-    </script> -->
+    <script type="text/javascript">
+        app.main.config.dataset.genres = util.json_decode("{{ genres }}");
+    </script>
 </head>
 
 <body>

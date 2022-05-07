@@ -75,7 +75,16 @@ app
                         height = height * 0.8;
                         block.css('height', height + 'px')
                     }
-                div subcontent
+                div page1
+                    {
+                        block.key('playlist_selections', []);
+                    }
+                    :hide
+                        css
+                            display none
+                    :show
+                        css
+                            display block
                     text hook1
                         html hi, i'm audiU—an AI with an ear for audio...
                         css
@@ -191,6 +200,53 @@ app
                             }
                         div spacer
                             height 5px
+                    button submit_btn
+                        class mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored
+                        html GO
+                        css
+                            outline none
+                            background-color #333
+                            font-size 17px
+                            letter-spacing 2px
+                            height 50px
+                            width 100px
+                            border-radius 3px
+                        :click
+                            {
+                                var values = [];
+                                var value_first = block.sibling('playlist_input').node().value;
+                                if (value_first && (`${value_first}`).trim().length > 0)
+                                    values.push(value_first);
+                                var extra_inputs = block.sibling('extra_inputs').children();
+                                for (var c in extra_inputs) {
+                                    if (extra_inputs[c].mark().includes('input_')) {
+                                        var value_next = extra_inputs[c].node().value;
+                                        if (value_next && (`${value_next}`).trim().length > 0)
+                                            values.push(value_next);
+                                    }
+                                }
+                                console.log("selected playlists: ");
+                                console.log(values);
+                                block.key('playlist_selections', values);
+                                if (values.length > 0) {
+                                    block.parent().on('hide')
+                                        .sibling('page2').on('show');
+                                }
+                                event.stopPropagation();
+                            }
+                div page2
+                    :hide
+                        css
+                            display none
+                    :show
+                        css
+                            display block
+                    css
+                        display none
+                        height 60px
+                        width 50%
+                        background-color red
+                        margin 0 auto
                     button submit_btn
                         class mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored
                         html GO

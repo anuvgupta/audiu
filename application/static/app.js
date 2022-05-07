@@ -165,7 +165,9 @@ var app = {
         }
     },
     main: {
-        config: {},
+        config: {
+            dataset: {}
+        },
         init: (_) => {
             console.clear();
             console.log("[main] loading...");

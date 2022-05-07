@@ -2,6 +2,13 @@
 // utilities
 
 var util = {
+    json_decode: (base64_str) => {
+        try {
+            return JSON.parse(atob(base64_str));
+        } catch (e) {
+            return "";
+        }
+    },
     mobile: _ => {
         return jQuery.browser.mobile;
     },

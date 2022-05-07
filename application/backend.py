@@ -1,6 +1,7 @@
 import os
 import json
 import flask
+import base64
 import waitress
 import multiprocessing
 
@@ -27,11 +28,13 @@ class Backend():
     host = ''
     ws_port = 0
     web_port = 0
+    db_local = None
     # constructor
     def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json'):
         self.host = host
         self.ws_port = ws_port
         self.web_port = web_port
+        self.db_local = {}
         self.socket_process = None
         self.socket_signal_queue = None
         self.static_url_path = ''
@@ -45,24 +48,24 @@ class Backend():
                                      template_folder=self.template_folder)
 
     ## DATABASE API ##
+    # import dataset & onnect to db
     def database_init(self, production=False):
-
         playlists = None
         genres = None
-
         with open(self.dataset_src) as dataset_file:
             dataset_json = json.load(dataset_file)
             playlists = dataset_json['playlists']
             genres = dataset_json['genres']
-
-        # print(playlists)
-        # print(genres)
-
+        self.db_local['playlists'] = playlists
+        self.db_local['genres'] = genres
+    # convenience function
+    def json_encode(self, obj, charset='ascii'):
+        return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)
 
     ## WEB SERVER ##
     # web home page route
     def view_home(self):
-        return flask.render_template("index.html")
+        return flask.render_template("index.html", genres=self.json_encode(list(self.db_local['genres'].keys())))
     # web model api route
     def view_model(self):
         try:
