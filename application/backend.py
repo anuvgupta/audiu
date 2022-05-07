@@ -13,8 +13,6 @@ PROD = True
 
 ## WEBSOCKET SERVER ##
 # socket server start
-
-
 def socket_run(production='False', host='localhost', port='3000', signal_queue=None):
     port = int(port)
     production = bool(production)
@@ -46,7 +44,8 @@ class Backend():
     ws_port = 0
     web_port = 0
     # constructor
-    def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001):
+
+    def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json'):
         self.host = host
         self.ws_port = ws_port
         self.web_port = web_port
@@ -54,12 +53,36 @@ class Backend():
         self.socket_signal_queue = None
         self.static_url_path = ''
         self.package_dir_path = os.path.dirname(os.path.abspath(__file__))
+        self.dataset_src = os.path.join(self.package_dir_path, dataset_src)
         self.static_folder = os.path.join(self.package_dir_path, static_folder)
         self.template_folder = os.path.join(self.package_dir_path, template_folder)
         self.flask_app = flask.Flask(__name__,
                                      static_url_path=self.static_url_path,
                                      static_folder=self.static_folder,
                                      template_folder=self.template_folder)
+
+    ## DATABASE API ##
+    def database_init(self):
+
+        playlists = None
+        genres = None
+
+        with open(self.dataset_src) as dataset_file:
+            dataset_json = json.load(dataset_file)
+            playlists = dataset_json['playlists']
+            genres = dataset_json['genres']
+
+        print(playlists)
+        print(genres)
+
+
+    ## WEBSOCKET SERVER ##
+    # websocket send
+    def socket_send(self, message):
+        # not implemented yet
+        # use self.socket_signal_queue to send data to websocket client
+        pass
+
 
     ## WEB SERVER ##
     # web home page route
@@ -93,6 +116,7 @@ class Backend():
     # web server start
     def web_run(self, production='False'):
         production = bool(production)
+        self.database_init()
         self.bind_routes()
         if production:
             waitress.serve(self.flask_app, host=self.host, port=self.web_port)
@@ -102,7 +126,7 @@ class Backend():
     ## BOTH SERVERS ##
     # start both servers in parallel
     def run_forever(self, production=False):
-        self.socket_signal_queue = multiprocessing.Queue()
+        self.socket_signal_queue = multiprocessing.Queue(10)
         self.socket_process = multiprocessing.Process(
             target=socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
         self.socket_process.start()
@@ -112,7 +136,7 @@ class Backend():
 
 # backend test main entry point
 def main():
-    Backend('static', 'templates', HOST, PORT, PORT + 1).run_forever(PROD)
+    Backend('static', 'templates', HOST, PORT, PORT + 1, 'dataset.json').run_forever(PROD)
 
 # thread entry point
 if __name__ == "__main__":
