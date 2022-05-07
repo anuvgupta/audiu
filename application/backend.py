@@ -28,7 +28,6 @@ class Backend():
     ws_port = 0
     web_port = 0
     # constructor
-
     def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json'):
         self.host = host
         self.ws_port = ws_port
@@ -46,7 +45,7 @@ class Backend():
                                      template_folder=self.template_folder)
 
     ## DATABASE API ##
-    def database_init(self):
+    def database_init(self, production=False):
 
         playlists = None
         genres = None
@@ -92,16 +91,16 @@ class Backend():
     # web server start
     def web_run(self, production='False'):
         production = bool(production)
-        self.database_init()
         self.bind_routes()
         if production:
             waitress.serve(self.flask_app, host=self.host, port=self.web_port)
         else:
             self.flask_app.run(host=self.host, port=self.web_port, debug=True)
         
-    ## BOTH SERVERS ##
-    # start both servers in parallel
+    ## EVERYTHING ##
+    # start both servers in parallel & connect to db
     def run_forever(self, production=False):
+        self.database_init(production)
         self.socket_signal_queue = multiprocessing.Queue(10)
         self.socket_process = multiprocessing.Process(
             target=sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))

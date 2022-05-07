@@ -78,6 +78,38 @@
     animation: rotating_n 1s linear infinite;
 }
 
+.rotating2 {
+    -webkit-animation: rotating 2s linear infinite;
+    -moz-animation: rotating 2s linear infinite;
+    -ms-animation: rotating 2s linear infinite;
+    -o-animation: rotating 2s linear infinite;
+    animation: rotating 2s linear infinite;
+}
+
+.rotating2_n {
+    -webkit-animation: rotating_n 2s linear infinite;
+    -moz-animation: rotating_n 2s linear infinite;
+    -ms-animation: rotating_n 2s linear infinite;
+    -o-animation: rotating_n 2s linear infinite;
+    animation: rotating_n 2s linear infinite;
+}
+
+.rotating3 {
+    -webkit-animation: rotating 3s linear infinite;
+    -moz-animation: rotating 3s linear infinite;
+    -ms-animation: rotating 3s linear infinite;
+    -o-animation: rotating 3s linear infinite;
+    animation: rotating 3s linear infinite;
+}
+
+.rotating3_n {
+    -webkit-animation: rotating_n 3s linear infinite;
+    -moz-animation: rotating_n 3s linear infinite;
+    -ms-animation: rotating_n 3s linear infinite;
+    -o-animation: rotating_n 3s linear infinite;
+    animation: rotating_n 3s linear infinite;
+}
+
 .rotating4 {
     -webkit-animation: rotating 4s linear infinite;
     -moz-animation: rotating 4s linear infinite;

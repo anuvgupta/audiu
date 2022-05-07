@@ -51,7 +51,7 @@ app
                 text-align center
             div spacer1
                 css
-                    height 100px
+                    height 120px
             div title
                 text text
                     val AudiU
@@ -70,14 +70,14 @@ app
             block model_form
                 @query window height != 0
                     {
-                        var bottom_space = 50 * 2;
+                        var bottom_space = 50 * 2.7;
                         var height = window.innerHeight - (100 + 10 + block.sibling('title').$().height() + bottom_space);
                         height = height * 0.8;
                         block.css('height', height + 'px')
                     }
                 div subcontent
                     text hook1
-                        html Hi, I'm AudiU, an AI with great taste in music!
+                        html hi, i'm audiU—an AI with an ear for audio...
                         css
                             color white
                             font-size 27px
@@ -85,7 +85,7 @@ app
                             margin-top 15px
                             line-height 120%
                     text hook2
-                        html Send me your playlists, and I'll find similar songs I think you will like...
+                        html pick your best playlists and i'll find some fresh tracks you might like!
                         css
                             color white
                             font-size 20px
@@ -96,16 +96,28 @@ app
                     div spacer_form
                         css
                             height 20px
+                    div image
+                        image img
+                            height 30px
+                            width 30px
+                            src img/waveform_w.png
+                            class rotating3
+                            css
+                                margin 0 auto
+                                -webkit-transform scaleY(-1)
+                                transform scaleY(-1)
+                    div spacer2-5
+                        css
+                            height 10px
                     text prompt
-                        val Which playlist(s) would you like me to listen to?
+                        val which playlists would you like me to listen to?
                         css
                             color white
                             font-size 35px
                             display block
-                            margin-top 15px
                             line-height 120%
                     text subprompt
-                        html [&nbsp;Spotify playlist link, ie. <a>https://open.spotify.com/playlist/5ghFHvZmV4FDK5YLeZQRu9</a>&nbsp;]
+                        html [&nbsp;spotify playlist link, ie. <a class='link-white' target='_blank' href='https://open.spotify.com/playlist/5ghFHvZmV4FDK5YLeZQRu9'>https://open.spotify.com/playlist/5ghFHvZmV4FDK5YLeZQRu9</a>&nbsp;]
                         css
                             color white
                             font-size 17px
