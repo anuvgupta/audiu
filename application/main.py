@@ -19,12 +19,14 @@ PROD = True
 
 ## MAIN ##
 # main entry point
+
+
 def main():
-    model_run_procs = {}
-    model_run_signal_queues = {}
     recommendations_model = recommendations.Recommendations(
         DATASET, MODEL_RUN_SRC)
     recommendations_model.load_dataset()
+    model_run_procs = {}
+    model_run_signal_queues = {}
     backend_signal_queue = multiprocessing.Queue(10)
     backend_process = multiprocessing.Process(
         target=backend.web_run, args=(str(DATASET), str(HOST), str(PORT), str(DB_HOST), str(DB_PORT), str(DB_NAME), str(MODEL_RUN_SRC), str(PROD), backend_signal_queue))
@@ -37,12 +39,12 @@ def main():
             except queue.Empty:
                 msg = ''
             if msg != '':
-                print('main received msg {}'.format(msg))
+                print('main received msg from backend: {}'.format(msg))
             if "main:recommendations-run" in msg:
                 target_run_id = msg.split(":")[2]
-                recommendations_model.generate_recommendations_proc_prepare(target_run_id)
+                recommendations_model.recommendations_prepare_input(target_run_id)
                 model_run_signal_queues[target_run_id] = multiprocessing.Queue(10)
-                model_run_procs[target_run_id] = multiprocessing.Process(target=recommendations.generate_recommendations_proc_fork, args=(
+                model_run_procs[target_run_id] = multiprocessing.Process(target=recommendations.Recommendations.recommendations_run, args=(
                     str(target_run_id), str(MODEL_RUN_SRC), model_run_signal_queues[target_run_id]))
                 model_run_procs[target_run_id].start()
             elif msg == "main:backend-done":
@@ -50,12 +52,31 @@ def main():
             else:
                 pass
             for run_id, model_run_signal_queue in model_run_signal_queues.items():
-                msg = ''
-                try:
-                    msg = model_run_signal_queue.get(False)
-                except queue.Empty:
+                if model_run_signal_queue != None:
                     msg = ''
-                # if msg == 
+                    try:
+                        msg = model_run_signal_queue.get(False)
+                    except queue.Empty:
+                        msg = ''
+                    if msg != '':
+                        print('main received msg from model run {}: {}'.format(run_id, msg))
+                    if "main:run-start" in msg:
+                        target_run_id = msg.split(":")[2]
+                        print("model run processes:")
+                        print(model_run_procs)
+                    elif "main:run-done" in msg:
+                        target_run_id = msg.split(":")[2]
+                        model_run_procs[target_run_id] = None
+                        model_run_signal_queues[target_run_id] = None
+                        print("model run processes:")
+                        print(model_run_procs)
+            for k in list(model_run_signal_queues.keys()):
+                if model_run_signal_queues[k] == None:
+                    del model_run_signal_queues[k]
+                if model_run_procs[k] == None:
+                    del model_run_procs[k]
+                    print(model_run_procs)
+            
     except Exception as e:
         # TODO: send msg to queues and join procs
         backend_signal_queue.put("backend:quit")

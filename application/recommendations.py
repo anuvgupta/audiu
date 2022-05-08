@@ -8,66 +8,69 @@ import pathlib
 import multiprocessing
 
 ## RECOMMENDATIONS CLASS ##
-
-# generate recommendations
-def generate_recommendations(run_id, target_playlists, reject_playlists, inference_playlists):
-    # TODO: actually generate recommendations using ml models
-    results = []
-    # training
-    ts_training_start = time.time()
-    for i in range(10):
-        print("run {}: training - sample epoch {}".format(run_id, i))
-        time.sleep(0.5)
-    ts_training_end = time.time()
-    ts_training_length = ts_training_end - ts_training_start
-    # inference
-    ts_inference_start = time.time()
-    for i in range(10):
-        print("run {}: inference - sample epoch {}".format(run_id, i))
-        results.append(str(i))
-        time.sleep(0.25)
-    ts_inference_end = time.time()
-    ts_inference_length = ts_inference_end - ts_inference_start
-    ts_total_length = ts_training_length + ts_inference_length
-    # return data
-    return (results, (ts_total_length, ts_training_length, ts_inference_length))
-
-# process fork for generating recommendations
-def generate_recommendations_proc_fork(run_id, model_run_src, model_run_signal_queue):
-    package_dir_path = os.path.dirname(os.path.abspath(__file__))
-    model_run_dir_path = os.path.join(package_dir_path, model_run_src)
-    model_run_path = pathlib.Path(os.path.join(model_run_dir_path, run_id))
-    input_data_json = None
-    with open(model_run_path / 'input.json', 'r') as f:
-        input_data_json = json.load(f)
-    target_playlists = input_data_json["target_playlists"]
-    reject_playlists = input_data_json["reject_playlists"]
-    inference_playlists = input_data_json["inference_playlists"]
-    input_data = {
-        "run_id": run_id,
-        "target_playlists": target_playlists,
-        "reject_playlists": reject_playlists,
-        "inference_playlists": inference_playlists
-    }
-    print("generating recommendations for run {}".format(run_id))
-    print(input_data)
-    results, ts_profile = generate_recommendations(
-        run_id, target_playlists, reject_playlists, inference_playlists)
-    output_data = {
-        "run_id": run_id,
-        "results": results,
-        "ts_profile": {
-            "ts_total_length": ts_profile[0],
-            "ts_training_length": ts_profile[1],
-            "ts_inference_length": ts_profile[2]
-        }
-    }
-    with open(model_run_path / 'output.json', 'w') as f:
-        json.dump(output_data, f, indent=4, sort_keys=False)
-    # TODO: report complete to parent process before quitting
-
 # recommendations model wrapper class
 class Recommendations():
+
+    # static methods
+    # generate recommendations
+    @staticmethod
+    def generate_recommendations(run_id, target_playlists, reject_playlists, inference_playlists):
+        # TODO: actually generate recommendations using ml models
+        results = []
+        # training
+        ts_training_start = time.time()
+        for i in range(10):
+            print("run {}: training - sample epoch {}".format(run_id, i))
+            time.sleep(0.5)
+        ts_training_end = time.time()
+        ts_training_length = ts_training_end - ts_training_start
+        # inference
+        ts_inference_start = time.time()
+        for i in range(10):
+            print("run {}: inference - sample epoch {}".format(run_id, i))
+            results.append(str(i))
+            time.sleep(0.25)
+        ts_inference_end = time.time()
+        ts_inference_length = ts_inference_end - ts_inference_start
+        ts_total_length = ts_training_length + ts_inference_length
+        # return data
+        return (results, (ts_total_length, ts_training_length, ts_inference_length))
+    # process fork for generating recommendations
+
+    @staticmethod
+    def recommendations_run(run_id, model_run_src, model_run_signal_queue):
+        model_run_signal_queue.put("main:run-start:{}".format(run_id))
+        package_dir_path = os.path.dirname(os.path.abspath(__file__))
+        model_run_dir_path = os.path.join(package_dir_path, model_run_src)
+        model_run_path = pathlib.Path(os.path.join(model_run_dir_path, run_id))
+        input_data_json = None
+        with open(model_run_path / 'input.json', 'r') as f:
+            input_data_json = json.load(f)
+        target_playlists = input_data_json["target_playlists"]
+        reject_playlists = input_data_json["reject_playlists"]
+        inference_playlists = input_data_json["inference_playlists"]
+        input_data = {
+            "run_id": run_id,
+            "target_playlists": target_playlists,
+            "reject_playlists": reject_playlists,
+            "inference_playlists": inference_playlists
+        }
+        print("generating recommendations for run {}".format(run_id))
+        # print(input_data)
+        results, ts_profile = Recommendations.generate_recommendations(
+            run_id, target_playlists, reject_playlists, inference_playlists)
+        output_data = {
+            "run_id": run_id,
+            "results": results,
+            "ts_profile": {
+                "ts_total_length": ts_profile[0],
+                "ts_training_length": ts_profile[1],
+                "ts_inference_length": ts_profile[2]
+            }
+        }
+        with open(model_run_path / 'output.json', 'w') as f:
+            json.dump(output_data, f, indent=4, sort_keys=False)
+        model_run_signal_queue.put("main:run-done:{}".format(run_id))
 
     # instance fields
     dataset_src = ''
@@ -126,7 +129,7 @@ class Recommendations():
         return genres_inverse
 
     # process fork for generating recommendations
-    def generate_recommendations_proc_prepare(self, run_id):
+    def recommendations_prepare_input(self, run_id):
         model_run_path = pathlib.Path(os.path.join(self.model_run_dir_path, run_id))
         model_run_path.mkdir(parents=True, exist_ok=True)
         request_json = None
