@@ -1,8 +1,10 @@
-flask
-spotipy
 numpy
-pandas
+flask
 keras
-scikit-learn
+pandas
+spotipy
 websockets
+mongoengine
+scikit-learn
+flask_mongoengine
 # tensorflow

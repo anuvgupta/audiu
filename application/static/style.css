@@ -69,7 +69,13 @@ div.bootbox.modal {
 }
 
 .bootbox-confirm div div div button.btn-primary {
-    background-color: #555
+    background-color: #555 !important;
+}
+.bootbox-confirm div div div button.btn-primary:hover {
+    background-color: #444 !important;
+}
+.bootbox-confirm div div div button.btn-primary:active {
+    background-color: #888 !important;
 }
 
 a.link-white {

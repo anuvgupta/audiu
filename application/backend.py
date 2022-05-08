@@ -3,15 +3,22 @@ import json
 import flask
 import base64
 import waitress
+import mongoengine
 import multiprocessing
+import flask_mongoengine
 
 # local imports
 import sockets
 
-DATASET = 'dataset.json'
 HOST = '0.0.0.0'
 PORT = 8001
+DATASET = 'dataset.json'
+DB_NAME = 'audiu'
+DB_HOST = 'localhost'
+DB_PORT = 27017
+DB_KEY = '5tay0ut!'
 PROD = True
+
 
 ## BACKEND WRAPPER ##
 # web & websocket wrapper class
@@ -26,15 +33,23 @@ class Backend():
     socket_process = None
     socket_signal_queue = None
     host = ''
+    db_host = ''
     ws_port = 0
     web_port = 0
+    db_name = ''
+    db_port = 0
     db_local = None
+    db_engine = None
     # constructor
-    def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json'):
+    def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json', db_host='localhost', db_port=27017, db_name='default'):
         self.host = host
+        self.db_host = db_host
         self.ws_port = ws_port
         self.web_port = web_port
+        self.db_name = db_name
+        self.db_port = db_port
         self.db_local = {}
+        self.db_engine = None
         self.socket_process = None
         self.socket_signal_queue = None
         self.static_url_path = ''
@@ -48,8 +63,38 @@ class Backend():
                                      template_folder=self.template_folder)
 
     ## DATABASE API ##
-    # import dataset & onnect to db
-    def database_init(self, production=False):
+    # mongo configuration object
+    class MongoConfig(object):
+        SECRET_KEY = os.environ.get('SECRET_KEY') or DB_KEY
+    # mongo model run record class
+    class ModelRun(mongoengine.Document):
+        model_type = mongoengine.StringField(required=True, unique=False)
+        playlist_selections = mongoengine.ListField(required=True, unique=False)
+        genre_selections = mongoengine.ListField(required=True, unique=False)
+        status = mongoengine.StringField(required=True, unique=False)
+        ts_created = mongoengine.DecimalField(min_value=0, precision=3)
+        ts_complete = mongoengine.DecimalField(min_value=0, precision=3)
+        time_total = mongoengine.DecimalField(min_value=0, precision=3)
+        time_training = mongoengine.DecimalField(min_value=0, precision=3)
+        time_inference = mongoengine.DecimalField(min_value=0, precision=3)
+    # add model run record to database
+    def database_new_model_run(self, model_type, playlist_selections, genre_selections, status, ts_created, ts_complete, time_total, time_training, time_inference):
+        new_model_run = Backend.ModelRun(model_type=model_type, playlist_selections=playlist_selections, genre_selections=genre_selections, status=status,
+                        ts_created=ts_created, ts_complete=ts_complete, time_total=time_total, time_training=time_training, time_inference=time_inference,)
+        new_model_run.save(force_insert=True)
+    # import dataset & connect to db
+    def database_run(self, production='False'):
+        production = bool(production)
+        # mongo init
+        self.db_engine = flask_mongoengine.MongoEngine()
+        self.flask_app.config.from_object(Backend.MongoConfig)
+        self.flask_app.config['MONGODB_SETTINGS'] = {
+            "db": self.db_name,
+            "host": self.db_host,
+            "port": self.db_port
+        }
+        self.db_engine.init_app(self.flask_app)
+        # local init
         playlists = None
         genres = None
         config = None
@@ -64,19 +109,28 @@ class Backend():
         self.db_local['genres'] = genres
         self.db_local['models'] = models
         self.db_local['config'] = config
-    # convenience function
+    # convenience conversion
     def json_encode(self, obj, charset='ascii'):
         return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)
 
     ## WEB SERVER ##
+    # request decode
+    def request_decode(self, raw_data):
+        raw_data = raw_data.decode('ascii')
+        return json.loads(raw_data)
     # web home page route
     def view_home(self):
-        return flask.render_template("index.html", config=self.json_encode(self.db_local['config']), genres=self.json_encode(list(self.db_local['genres'].keys())), models=self.json_encode(self.db_local['models']))
+        return flask.render_template("index.html",
+            config=self.json_encode(self.db_local['config']),
+            genres=self.json_encode(list(self.db_local['genres'].keys())),
+            models=self.json_encode(self.db_local['models'])
+        )
     # web model api route
     def view_model(self):
+        request_data = None
         try:
-            request_json = flask.request.get_json()
-        except flask.BadRequest:
+            request_data = self.request_decode(flask.request.get_data())
+        except Exception as e:
             return (flask.jsonify({
                 'success': False,
                 'message': 'Invalid request input data.'
@@ -86,9 +140,9 @@ class Backend():
                 'success': True,
                 'message': 'Recommendations generated.',
                 'data': {
-                    'a': request_json.get('a'),
-                    'c': request_json.get('c'),
-                    'e': request_json.get('e')
+                    'a': request_data.get('a', '1'),
+                    'c': request_data.get('c', '3'),
+                    'e': request_data.get('e', '5')
                 }
             })
     # web route setup
@@ -109,7 +163,7 @@ class Backend():
     ## EVERYTHING ##
     # start both servers in parallel & connect to db
     def run_forever(self, production=False):
-        self.database_init(production)
+        self.database_run(str(production))
         self.socket_signal_queue = multiprocessing.Queue(10)
         self.socket_process = multiprocessing.Process(
             target=sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
@@ -120,7 +174,8 @@ class Backend():
 
 # backend test main entry point
 def main():
-    Backend('static', 'templates', HOST, PORT, PORT + 1, DATASET).run_forever(PROD)
+    Backend('static', 'templates', HOST, PORT, PORT + 1,
+            DATASET, DB_HOST, DB_PORT, DB_NAME).run_forever(PROD)
 
 # thread entry point
 if __name__ == "__main__":

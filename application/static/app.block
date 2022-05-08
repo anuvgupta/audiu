@@ -314,7 +314,10 @@ app
                             margin-right auto
                             //font-style italic
                     input genre_input
-                        placeholder dreampop
+                        {
+                            var genres_list = app.main.get_genre_list();
+                            block.attribute('placeholder', `${genres_list[util.rand_int(0, genres_list.length - 1)]}`);
+                        }
                         class genre-input
                         #value
                             {
@@ -535,6 +538,9 @@ app
                                     var playlist_selections = block.parent().sibling('page1').key('playlist_selections');
                                     var genre_selections = block.parent().sibling('page2').key('genre_selections');
                                     console.log(selected_model, playlist_selections, genre_selections);
+                                    app.web.api.generate_recommendations(selected_model, playlist_selections, genre_selections, (data) => {
+                                        console.log(data);
+                                    });
                                     block.parent().on('hide')
                                         .sibling('page4').on('show');
                                 }

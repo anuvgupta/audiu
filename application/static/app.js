@@ -104,8 +104,8 @@ var app = {
             $.ajax({
                 url: endpoint,
                 type: "POST",
-                data: body,
-                dataType: "json",
+                data: JSON.stringify(body),
+                // dataType: "text",
                 success: function (data) {
                     console.log(`POST to ${endpoint}`);
                     success(data);
@@ -118,6 +118,28 @@ var app = {
                 },
             });
         },
+        api: {
+            generate_recommendations: (selected_model, playlist_selections, genre_selections, callback = null) => {
+                app.web.post("model", {
+                    selected_model: selected_model,
+                    playlist_selections: playlist_selections,
+                    genre_selections: genre_selections
+                }, (data) => {
+                    if (data.success && data.hasOwnProperty('data') && callback)
+                        callback(data.data);
+                }, (data, error, status) => {
+                    console.error(`HTTP request error with "generate_recommendations": ${status}`);
+                    console.log(error);
+                    console.log(data);
+                    if (data.hasOwnProperty('message')) {
+                        console.log(data.message);
+                        app.ui.display_modal.generic_confirm("Recommendations Model Error", `Server Error: ${data.message}`, (s) => {
+                            // console.log(s);
+                        });
+                    }
+                });
+            }
+        }
     },
     ws: {
         id: 0,
