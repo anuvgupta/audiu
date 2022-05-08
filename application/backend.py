@@ -1,4 +1,8 @@
+# AUDIU
+# backend.py
+
 import os
+import sys
 import json
 import flask
 import base64
@@ -9,19 +13,10 @@ import flask_mongoengine
 
 # local imports
 import sockets
-
-HOST = '0.0.0.0'
-PORT = 8001
-DATASET = 'dataset.json'
-DB_NAME = 'audiu'
-DB_HOST = 'localhost'
-DB_PORT = 27017
 DB_KEY = '5tay0ut!'
-PROD = True
 
-
-## BACKEND WRAPPER ##
-# web & websocket wrapper class
+## BACKEND CLASS ##
+# web & websocket backend wrapper class
 class Backend():
 
     # instance fields
@@ -61,6 +56,15 @@ class Backend():
                                      static_url_path=self.static_url_path,
                                      static_folder=self.static_folder,
                                      template_folder=self.template_folder)
+    # start both servers in parallel & connect to db
+    def run_forever(self, production=False):
+        self.database_run(str(production))
+        self.socket_signal_queue = multiprocessing.Queue(10)
+        self.socket_process = multiprocessing.Process(
+            target=sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
+        self.socket_process.start()
+        self.web_run(str(production))
+        self.socket_process.join()
 
     ## DATABASE API ##
     # mongo configuration object
@@ -109,9 +113,6 @@ class Backend():
         self.db_local['genres'] = genres
         self.db_local['models'] = models
         self.db_local['config'] = config
-    # convenience conversion
-    def json_encode(self, obj, charset='ascii'):
-        return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)
 
     ## WEB SERVER ##
     # request decode
@@ -145,6 +146,9 @@ class Backend():
                     'e': request_data.get('e', '5')
                 }
             })
+    # convenience conversion
+    def json_encode(self, obj, charset='ascii'):
+        return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)
     # web route setup
     def bind_routes(self):
         self.flask_app.add_url_rule(
@@ -159,24 +163,4 @@ class Backend():
             waitress.serve(self.flask_app, host=self.host, port=self.web_port)
         else:
             self.flask_app.run(host=self.host, port=self.web_port, debug=True)
-        
-    ## EVERYTHING ##
-    # start both servers in parallel & connect to db
-    def run_forever(self, production=False):
-        self.database_run(str(production))
-        self.socket_signal_queue = multiprocessing.Queue(10)
-        self.socket_process = multiprocessing.Process(
-            target=sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
-        self.socket_process.start()
-        self.web_run(str(production))
-        self.socket_process.join()
-
-
-# backend test main entry point
-def main():
-    Backend('static', 'templates', HOST, PORT, PORT + 1,
-            DATASET, DB_HOST, DB_PORT, DB_NAME).run_forever(PROD)
-
-# thread entry point
-if __name__ == "__main__":
-    main()
+    
