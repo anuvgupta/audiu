@@ -21,6 +21,17 @@ app
             console.log('[block] ready');
         }
 
+    #target_run_id
+        {
+            block.child('main/content/model_form')
+                .child('page1').on('hide')
+                .sibling('page2').on('hide')
+                .sibling('page3').on('hide')
+                .sibling('page4').on('hide')
+                .sibling('results').on('show')
+            ;
+        }
+
     div background
         css
             z-index -5
@@ -569,6 +580,37 @@ app
                                 margin 0 auto
                                 -webkit-transform scaleY(-1)
                                 transform scaleY(-1)
+                    div spacer2-5
+                        css
+                            height 10px
+                div results
+                    :hide
+                        css
+                            display none
+                    :show
+                        css
+                            display block
+                    css
+                        display none
+                        margin 0 auto
+                    div spacer_form
+                        css
+                            height 20px
+                    div image
+                        image img
+                            height 40px
+                            width 40px
+                            src img/waveform_w.png
+                            class rotating1
+                            css
+                                margin 0 auto
+                                -webkit-transform scaleY(-1)
+                                transform scaleY(-1)
+                    div data_out
+                        width 80%
+                        max-width 700px
+                        height 400px
+                        background-color #444
                     div spacer2-5
                         css
                             height 10px

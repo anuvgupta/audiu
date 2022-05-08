@@ -144,11 +144,6 @@ class Backend():
             config=self.json_encode(self.db_local['config']),
             genres=self.json_encode(list(self.db_local['genres'].keys())),
             models=self.json_encode(self.db_local['models']))
-    # TODO: create route for viewing run output
-    def view_run(self):
-        # TODO: read output file and return data
-        # if output file doesnt exist, its not done, so print a laoding symbol and time elapsed
-        pass
     # web model api route
     def view_model(self):
         # parse request data
@@ -197,6 +192,8 @@ class Backend():
     def bind_routes(self):
         self.flask_app.add_url_rule(
             "/", "home", view_func=self.view_home, methods=['GET'])
+        self.flask_app.add_url_rule(
+            "/fresh", "fresh", view_func=self.view_home, methods=['GET'])
         self.flask_app.add_url_rule(
             "/model", "model", view_func=self.view_model, methods=['POST'])
     # web server start

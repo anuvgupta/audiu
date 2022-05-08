@@ -83,6 +83,11 @@ var app = {
             app.ui.block.fill(document.body);
             Block.queries();
             setTimeout((_) => {
+                if (app.main.config.target_run_id != '') {
+                    app.ui.block.data({
+                        target_run_id: app.main.config.target_run_id
+                    });
+                }
                 app.ui.block.css("opacity", "1");
                 app.ui.block.on("ready");
                 setTimeout(_ => {
@@ -190,6 +195,8 @@ var app = {
     },
     main: {
         config: {
+            url_params: null,
+            target_run_id: "",
             dataset: {}
         },
         genre_correction: (genre) => {
@@ -225,6 +232,11 @@ var app = {
         init: (_) => {
             console.clear();
             console.log("[main] loading...");
+            app.main.config.url_params = new URLSearchParams(window.location.search);
+            if (window.location.pathname == '/fresh') {
+                app.main.config.target_run_id = app.main.config.url_params.get('r')
+            }
+            console.log("target run set to: " + app.main.config.target_run_id);
             setTimeout((_) => {
                 app.ui.place_root_block();
                 app.ui.block.load(
