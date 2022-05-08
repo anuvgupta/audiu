@@ -5,7 +5,6 @@ import os
 import json
 import time
 import pathlib
-import multiprocessing
 
 ## RECOMMENDATIONS CLASS ##
 # recommendations model wrapper class

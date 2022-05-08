@@ -15,6 +15,9 @@ import flask_mongoengine
 
 # local imports
 import sockets
+
+# constants
+DB_ID_LEN = 24
 DB_KEY = '5tay0ut!'
 
 ## BACKEND CLASS ##

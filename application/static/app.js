@@ -110,7 +110,6 @@ var app = {
                 url: endpoint,
                 type: "POST",
                 data: JSON.stringify(body),
-                // dataType: "text",
                 success: function (data) {
                     console.log(`POST to ${endpoint}`);
                     success(data);

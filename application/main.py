@@ -8,6 +8,7 @@ import multiprocessing
 import backend
 import recommendations
 
+# constants
 HOST = '0.0.0.0'
 PORT = 8001
 DATASET = 'dataset.json'
