@@ -45,7 +45,7 @@ input.playlist-input {
     width: 85%;
     background-color: #222;
     border-radius: 3px;
-    border: 2px solid #333;
+    border: 1.5px solid #444;
     color: white;
     outline: none;
 }
@@ -59,7 +59,7 @@ input.genre-input {
     width: 85%;
     background-color: #222;
     border-radius: 3px;
-    border: 2px solid #333;
+    border: 1.5px solid #444;
     color: white;
     outline: none;
 }

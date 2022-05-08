@@ -267,7 +267,7 @@ app
                             margin-top 15px
                             line-height 120%
                     text hook2
-                        html pick your 5 top genres to help me find better tracks for you!
+                        html pick your top 5 genres to help me narrow down the search!
                         css
                             color white
                             font-size 20px
