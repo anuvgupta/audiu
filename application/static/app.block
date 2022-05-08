@@ -561,8 +561,8 @@ app
                             height 20px
                     div image
                         image img
-                            height 30px
-                            width 30px
+                            height 40px
+                            width 40px
                             src img/waveform_w.png
                             class rotating1
                             css

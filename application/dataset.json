@@ -1,5 +1,10 @@
 {
     "config": {
+        "defaults": {
+            "selected_model": "random_forest",
+            "playlist_selections": ["5ghFHvZmV4FDK5YLeZQRu9"],
+            "genre_selections": ["rock", "pop_rock", "indie_pop", "punk_rock", "alternative_rock"]
+        },
         "genre_remove_item": "mixed",
         "genre_replacements": {
             "r n b": "r & b",
@@ -220,7 +225,7 @@
         "edm": ["edm","edm_hits", "edm_samplings", "planet_rave"],
         "dance": ["mint", "dance_hits", "pop_remix", "creamy", "dance_classics","big_room_dance","fresh_dance_pop"],
         "electronic": ["alternative_beats", "trap_mojito", "dubstep_don","dance_electronic_mix","electronic_x","generation_electronica"],
-        "house": ["housewerk", "deep_house_relax", "uk_house_music", "37i9dQZF1DX1tW4VlEfDSS"],
+        "house": ["housewerk", "deep_house_relax", "uk_house_music", "groove_theory"],
         "afro": ["african_heat", "we_everywhere","afro_hits","afrobeats_mix","afro_indie","afro_party_anthems","classic_afropop","afropop"],
         "latin": ["viva_latino", "dancehall_official","50_latin_classics", "90s_latino","chill_latino","latin_party_anthems","latin_pop_rising","latin_r_n_b"],    
         

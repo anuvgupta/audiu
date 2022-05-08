@@ -120,6 +120,8 @@ var app = {
         },
         api: {
             generate_recommendations: (selected_model, playlist_selections, genre_selections, callback = null) => {
+                for (var g in genre_selections)
+                    genre_selections[g] = app.main.reverse_genre_correction(genre_selections[g])
                 app.web.post("model", {
                     selected_model: selected_model,
                     playlist_selections: playlist_selections,

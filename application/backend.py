@@ -4,6 +4,7 @@
 import os
 import sys
 import json
+import time
 import flask
 import base64
 import waitress
@@ -35,6 +36,7 @@ class Backend():
     db_port = 0
     db_local = None
     db_engine = None
+    recommendations_model = None
     # constructor
     def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json', db_host='localhost', db_port=27017, db_name='default'):
         self.host = host
@@ -47,6 +49,7 @@ class Backend():
         self.db_engine = None
         self.socket_process = None
         self.socket_signal_queue = None
+        self.recommendations_model = None
         self.static_url_path = ''
         self.package_dir_path = os.path.dirname(os.path.abspath(__file__))
         self.dataset_src = os.path.join(self.package_dir_path, dataset_src)
@@ -76,16 +79,17 @@ class Backend():
         playlist_selections = mongoengine.ListField(required=True, unique=False)
         genre_selections = mongoengine.ListField(required=True, unique=False)
         status = mongoengine.StringField(required=True, unique=False)
-        ts_created = mongoengine.DecimalField(min_value=0, precision=3)
-        ts_complete = mongoengine.DecimalField(min_value=0, precision=3)
-        time_total = mongoengine.DecimalField(min_value=0, precision=3)
-        time_training = mongoengine.DecimalField(min_value=0, precision=3)
-        time_inference = mongoengine.DecimalField(min_value=0, precision=3)
+        ts_created = mongoengine.DecimalField(min_value=0, precision=6)
+        ts_complete = mongoengine.DecimalField(min_value=0, precision=6)
+        time_total = mongoengine.DecimalField(min_value=0, precision=6)
+        time_training = mongoengine.DecimalField(min_value=0, precision=6)
+        time_inference = mongoengine.DecimalField(min_value=0, precision=6)
     # add model run record to database
     def database_new_model_run(self, model_type, playlist_selections, genre_selections, status, ts_created, ts_complete, time_total, time_training, time_inference):
         new_model_run = Backend.ModelRun(model_type=model_type, playlist_selections=playlist_selections, genre_selections=genre_selections, status=status,
                         ts_created=ts_created, ts_complete=ts_complete, time_total=time_total, time_training=time_training, time_inference=time_inference,)
         new_model_run.save(force_insert=True)
+        return str(new_model_run.id)
     # import dataset & connect to db
     def database_run(self, production='False'):
         production = bool(production)
@@ -113,6 +117,9 @@ class Backend():
         self.db_local['genres'] = genres
         self.db_local['models'] = models
         self.db_local['config'] = config
+    # link recommendations machine learning model
+    def link_ml_model(self, recommendations_model):
+        self.recommendations_model = recommendations_model
 
     ## WEB SERVER ##
     # request decode
@@ -124,10 +131,10 @@ class Backend():
         return flask.render_template("index.html",
             config=self.json_encode(self.db_local['config']),
             genres=self.json_encode(list(self.db_local['genres'].keys())),
-            models=self.json_encode(self.db_local['models'])
-        )
+            models=self.json_encode(self.db_local['models']))
     # web model api route
     def view_model(self):
+        # parse request data
         request_data = None
         try:
             request_data = self.request_decode(flask.request.get_data())
@@ -136,16 +143,29 @@ class Backend():
                 'success': False,
                 'message': 'Invalid request input data.'
             }), 400)
-        else:
-            return flask.jsonify({
-                'success': True,
-                'message': 'Recommendations generated.',
-                'data': {
-                    'a': request_data.get('a', '1'),
-                    'c': request_data.get('c', '3'),
-                    'e': request_data.get('e', '5')
-                }
-            })
+        selected_model = request_data.get('selected_model', self.db_local['config']['defaults']['selected_model'])
+        playlist_selections = request_data.get('playlist_selections', self.db_local['config']['defaults']['playlist_selections'])
+        genre_selections = request_data.get('genre_selections', self.db_local['config']['defaults']['genre_selections'])
+        # data preprocessing
+        target_playlists = playlist_selections
+        reject_playlists = self.recommendations_model.genres_to_playlists(self.recommendations_model.genre_set_invert(genre_selections), False)
+        inference_playlists = self.recommendations_model.genres_to_playlists(genre_selections, False)
+        # create model run record
+        ts_created = time.time()
+        run_id = self.database_new_model_run(selected_model, playlist_selections, genre_selections, "created", ts_created, 0,0,0,0)
+        # # run model to generate recommendations
+        self.recommendations_model.generate_recommendations_proc(run_id, target_playlists, reject_playlists, inference_playlists)
+        # return run info
+        return flask.jsonify({
+            'success': True,
+            'message': 'Recommendations generated.',
+            'data': {
+                'run_id': run_id,
+                'selected_model': selected_model,
+                'playlist_selections': playlist_selections,
+                'genre_selections': genre_selections
+            }
+        })
     # convenience conversion
     def json_encode(self, obj, charset='ascii'):
         return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)

@@ -16,9 +16,11 @@ PROD = True
 ## MAIN ##
 # main entry point
 def main():
+    rc = Recommendations(DATASET)
     bk = Backend('static', 'templates', HOST, PORT, PORT + 1,
                  DATASET, DB_HOST, DB_PORT, DB_NAME)
-    rc = Recommendations(DATASET)
+    rc.load_dataset()
+    bk.link_ml_model(rc)
     bk.run_forever(PROD)
 
 # thread entry point
