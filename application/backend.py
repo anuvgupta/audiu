@@ -96,6 +96,7 @@ class Backend():
         model_type = mongoengine.StringField(required=True, unique=False)
         playlist_selections = mongoengine.ListField(required=True, unique=False)
         genre_selections = mongoengine.ListField(required=True, unique=False)
+        inference_output = mongoengine.ListField(required=True, unique=False)
         status = mongoengine.StringField(required=True, unique=False)
         ts_created = mongoengine.DecimalField(min_value=0, precision=6)
         ts_complete = mongoengine.DecimalField(min_value=0, precision=6)
@@ -104,10 +105,27 @@ class Backend():
         time_inference = mongoengine.DecimalField(min_value=0, precision=6)
     # add model run record to database
     def database_new_model_run(self, model_type, playlist_selections, genre_selections, status, ts_created, ts_complete, time_total, time_training, time_inference):
-        new_model_run = Backend.ModelRun(model_type=model_type, playlist_selections=playlist_selections, genre_selections=genre_selections, status=status,
+        new_model_run = Backend.ModelRun(model_type=model_type, playlist_selections=playlist_selections, genre_selections=genre_selections, inference_output=[], status=status,
                         ts_created=ts_created, ts_complete=ts_complete, time_total=time_total, time_training=time_training, time_inference=time_inference,)
         new_model_run.save(force_insert=True)
         return str(new_model_run.id)
+    # check model run status in database
+    def database_check_model_run(self, run_id):
+        query = Backend.ModelRun.objects(model_run_id__exact=run_id)
+        if len(query) != 1:
+            return None
+        model_run = query.first()
+        if not model_run:
+            return None
+        return model_run
+    # update model run status in database
+    def database_update_model_run_status(self, run_id, run_status):
+        # TODO: implement this
+        pass
+    # update model run
+    def database_update_model_run_output(self, run_id, inference_output):
+        # TODO: implement this
+        pass
     # import dataset & connect to db
     def database_init(self, production='False'):
         production = bool(production)
@@ -152,7 +170,8 @@ class Backend():
         res_msg_default = 'Recommendations generating...'
         res_msg_alternate = 'Recommendations generated!'
         method = flask.request.method
-        if method == "POST":
+        if method == "POST":  # POST
+            ## process a new model run ##
             # parse request data
             request_data = None
             try:
@@ -193,6 +212,7 @@ class Backend():
                 }
             })
         else:  # GET
+            ## check status of existing model run ##
             # parse & verify run id
             target_run_id = flask.request.args.get("run_id", "")
             if target_run_id == None or not target_run_id or target_run_id == "" or len(target_run_id) != DB_ID_LEN:
@@ -200,6 +220,8 @@ class Backend():
                     'success': False,
                     'message': 'Invalid request input data (invalid "run_id").'
                 }), 400)
+            # check model run status in database
+            # TODO: run database_check_model_run here
             # return run info
             return flask.jsonify({
                 'success': True,

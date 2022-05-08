@@ -63,6 +63,7 @@ def main():
                         target_run_id = msg.split(":")[2]
                         print("model run processes:")
                         print(model_run_procs)
+                        # TODO: tell backend process to update model run status to running
                     elif "main:run-done" in msg:
                         target_run_id = msg.split(":")[2]
                         model_run_procs[target_run_id].join()
@@ -70,6 +71,8 @@ def main():
                         model_run_signal_queues[target_run_id] = None
                         print("model run processes:")
                         print(model_run_procs)
+                        # TODO: tell backend process to update model run status to complete
+                        # TODO: backend should also save model run output to the db record, then delete the run folder (if deleting enabled as a global constant)
             for k in list(model_run_signal_queues.keys()):
                 if model_run_signal_queues[k] == None:
                     del model_run_signal_queues[k]
