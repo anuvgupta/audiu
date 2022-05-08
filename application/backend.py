@@ -149,45 +149,66 @@ class Backend():
             models=self.json_encode(self.db_local['models']))
     # web model api route
     def view_model(self):
-        # parse request data
-        request_data = None
-        try:
-            request_data = self.request_decode(flask.request.get_data())
-        except Exception as e:
-            return (flask.jsonify({
-                'success': False,
-                'message': 'Invalid request input data.'
-            }), 400)
-        selected_model = request_data.get('selected_model', self.db_local['config']['defaults']['selected_model'])
-        playlist_selections = request_data.get('playlist_selections', self.db_local['config']['defaults']['playlist_selections'])
-        genre_selections = request_data.get('genre_selections', self.db_local['config']['defaults']['genre_selections'])
-        # create model run record
-        ts_created = time.time()
-        run_id = self.database_new_model_run(selected_model, playlist_selections, genre_selections, "created", ts_created, 0,0,0,0)
-        request_data = {
-            "run_id": run_id,
-            "selected_model": selected_model,
-            "playlist_selections": playlist_selections,
-            "genre_selections": genre_selections
-        }
-        # save request info for parent process to handle
-        model_run_path = pathlib.Path(os.path.join(self.model_run_dir_path, run_id))
-        model_run_path.mkdir(parents=True, exist_ok=True)
-        with open(model_run_path / 'request.json', 'w') as f:
-            json.dump(request_data, f, indent=4, sort_keys=False)
-        self.backend_signal_queue.put("main:recommendations-run:{}".format(run_id))
-        # return run info
-        return flask.jsonify({
-            'success': True,
-            'message': 'Recommendations generating...',
-            'data': {
-                'run_id': run_id,
-                'selected_model': selected_model,
-                'playlist_selections': playlist_selections,
-                'genre_selections': genre_selections,
-                "ts_created": ts_created
+        res_msg_default = 'Recommendations generating...'
+        res_msg_alternate = 'Recommendations generated!'
+        method = flask.request.method
+        if method == "POST":
+            # parse request data
+            request_data = None
+            try:
+                request_data = self.request_decode(flask.request.get_data())
+            except Exception as e:
+                return (flask.jsonify({
+                    'success': False,
+                    'message': 'Invalid request input data (invalid format).'
+                }), 400)
+            selected_model = request_data.get('selected_model', self.db_local['config']['defaults']['selected_model'])
+            playlist_selections = request_data.get('playlist_selections', self.db_local['config']['defaults']['playlist_selections'])
+            genre_selections = request_data.get('genre_selections', self.db_local['config']['defaults']['genre_selections'])
+            # create model run record
+            ts_created = time.time()
+            run_id = self.database_new_model_run(selected_model, playlist_selections, genre_selections, "created", ts_created, 0,0,0,0)
+            request_data = {
+                "run_id": run_id,
+                "selected_model": selected_model,
+                "playlist_selections": playlist_selections,
+                "genre_selections": genre_selections
             }
-        })
+            # save request info for parent process to handle
+            model_run_path = pathlib.Path(os.path.join(self.model_run_dir_path, run_id))
+            model_run_path.mkdir(parents=True, exist_ok=True)
+            with open(model_run_path / 'request.json', 'w') as f:
+                json.dump(request_data, f, indent=4, sort_keys=False)
+            self.backend_signal_queue.put("main:recommendations-run:{}".format(run_id))
+            # return run info
+            return flask.jsonify({
+                'success': True,
+                'message': res_msg_default,
+                'data': {
+                    'run_id': run_id,
+                    'selected_model': selected_model,
+                    'playlist_selections': playlist_selections,
+                    'genre_selections': genre_selections,
+                    "ts_created": ts_created
+                }
+            })
+        else:  # GET
+            # parse & verify run id
+            target_run_id = flask.request.args.get("run_id", "")
+            if target_run_id == None or not target_run_id or target_run_id == "" or len(target_run_id) != DB_ID_LEN:
+                return (flask.jsonify({
+                    'success': False,
+                    'message': 'Invalid request input data (invalid "run_id").'
+                }), 400)
+            # return run info
+            return flask.jsonify({
+                'success': True,
+                'message': res_msg_default,
+                'data': {
+                    'run_id': target_run_id,
+                }
+            })
+                
     # convenience conversion
     def json_encode(self, obj, charset='ascii'):
         return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)
@@ -198,7 +219,7 @@ class Backend():
         self.flask_app.add_url_rule(
             "/fresh", "fresh", view_func=self.view_home, methods=['GET'])
         self.flask_app.add_url_rule(
-            "/model", "model", view_func=self.view_model, methods=['POST'])
+            "/model", "model", view_func=self.view_model, methods=['POST', 'GET'])
     # web server start
     def web_serve(self, production='False'):
         production = bool(production)

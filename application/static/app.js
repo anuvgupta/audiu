@@ -122,6 +122,24 @@ var app = {
                 },
             });
         },
+        get: (endpoint, params, success, failure) => {
+            var query_string = util.encode_url_query_params(params);
+            var query_url = `${endpoint}?${query_string}`;
+            $.ajax({
+                url: query_url,
+                type: "GET",
+                success: function (data) {
+                    console.log(`GET to ${query_url}`);
+                    success(data);
+                },
+                error: function (xhr, status, error) {
+                    console.error(status);
+                    console.log(xhr.responseJSON);
+                    console.log(error);
+                    failure(xhr.responseJSON, error, status);
+                },
+            });
+        },
         api: {
             generate_recommendations: (selected_model, playlist_selections, genre_selections, callback = null) => {
                 for (var g in genre_selections)
@@ -139,9 +157,23 @@ var app = {
                     console.log(data);
                     if (data.hasOwnProperty('message')) {
                         console.log(data.message);
-                        app.ui.display_modal.generic_confirm("Recommendations Model Error", `Server Error: ${data.message}`, (s) => {
-                            // console.log(s);
-                        });
+                        app.ui.display_modal.generic_confirm("Recommendations Model Error", `Server Error: ${data.message}`, (s) => { /* console.log(s); */ });
+                    }
+                });
+            },
+            check_recommendations_status: (run_id, callback = null) => {
+                app.web.get("model", {
+                    run_id: run_id,
+                }, (data) => {
+                    if (data.success && data.hasOwnProperty('data') && callback)
+                        callback(data.data);
+                }, (data, error, status) => {
+                    console.error(`HTTP request error with "generate_recommendations": ${status}`);
+                    console.log(error);
+                    console.log(data);
+                    if (data.hasOwnProperty('message')) {
+                        console.log(data.message);
+                        app.ui.display_modal.generic_confirm("Recommendations Model Error", `Server Error: ${data.message}`, (s) => { /* console.log(s); */ });
                     }
                 });
             }

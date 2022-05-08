@@ -551,7 +551,15 @@ app
                                     var genre_selections = block.parent().sibling('page2').key('genre_selections');
                                     console.log(selected_model, playlist_selections, genre_selections);
                                     app.web.api.generate_recommendations(selected_model, playlist_selections, genre_selections, (data) => {
+                                        console.log('model running');
                                         console.log(data);
+                                        if (data.hasOwnProperty('run_id') && data.run_id) {
+                                            var run_id = data.run_id;
+                                            var new_loc = `/fresh?r=${run_id}`;
+                                            setTimeout(_ => {
+                                                util.redirect(new_loc);
+                                            }, 500);
+                                        }
                                     });
                                     block.parent().on('hide')
                                         .sibling('page4').on('show');

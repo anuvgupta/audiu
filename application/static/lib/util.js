@@ -2,6 +2,15 @@
 // utilities
 
 var util = {
+    redirect: (url) => {
+        window.location.href = url;
+    },
+    encode_url_query_params: (data_obj) => {
+        var data_arr = [];
+        for (var d in data_obj)
+            data_arr.push(`${window.encodeURIComponent(d)}=${window.encodeURIComponent(data_obj[d])}`);
+        return data_arr.join('&');
+    },
     json_decode: (base64_str) => {
         try {
             return JSON.parse(atob(base64_str));
