@@ -29,6 +29,7 @@ app
                 .sibling('page3').on('hide')
                 .sibling('page4').on('hide')
                 .sibling('results').on('show')
+                    .data({  target_run_id: target_run_id  })
             ;
         }
 
@@ -592,25 +593,68 @@ app
                             display block
                     css
                         display none
-                        margin 0 auto
+                        margin 40px auto 10px
                     div spacer_form
                         css
                             height 20px
-                    div image
-                        image img
-                            height 40px
-                            width 40px
-                            src img/waveform_w.png
-                            class rotating1
+                    #target_run_id
+                        {
+                            console.log(target_run_id);
+                        }
+                    block data_out
+                        css
+                            width 80%
+                            max-width 800px
+                            height 550px
+                            background-color #1a1a1a
+                            border-radius 6px
+                            border 1px solid #1e1e1e
+                            margin 0 auto
+                        div spacer0
                             css
-                                margin 0 auto
-                                -webkit-transform scaleY(-1)
-                                transform scaleY(-1)
-                    div data_out
-                        width 80%
-                        max-width 700px
-                        height 400px
-                        background-color #444
+                                height 10px
+                        div results_loading
+                            text text
+                                val i'm still listening...
+                                css
+                                    color #fafafa
+                                    font-size 24px
+                                    letter-spacing 0.7px
+                        div spacer1
+                            css
+                                height 30px
+                        div image
+                            image img
+                                height 50px
+                                width 50px
+                                src img/loading_ellipsis_slow.svg
+                                class rotating2_n
+                                css
+                                    margin 0 auto
+                                    -webkit-transform scaleY(-1)
+                                    transform scaleY(-1)
+                                {
+                                    // flip loading image
+                                    var switch_interval = 5;
+                                    var rot_int = 2;
+                                    var negative = true;
+                                    setInterval(_ => {
+                                        var className = `rotating${rot_int}${(negative ? '_n' : '')}`;
+                                        block.$().removeClass(className);
+                                        negative = !negative;
+                                        className = `rotating${rot_int}${(negative ? '_n' : '')}`;
+                                        block.class(className);
+                                    }, switch_interval * 1000)
+                                }
+                        div spacer2
+                            css
+                                height 30px
+                        text subtext
+                            html refresh for results!<br/><span style="font-size: 14px;">or bookmark this page and check later</span>
+                            css
+                                color #f0f0f0
+                                font-size 23px
+                                letter-spacing 0.5px
                     div spacer2-5
                         css
                             height 10px
