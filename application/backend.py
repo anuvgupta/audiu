@@ -172,6 +172,7 @@ class Backend():
             "playlist_selections": playlist_selections,
             "genre_selections": genre_selections
         }
+        # save request info for parent process to handle
         model_run_path = pathlib.Path(os.path.join(self.model_run_dir_path, run_id))
         model_run_path.mkdir(parents=True, exist_ok=True)
         with open(model_run_path / 'request.json', 'w') as f:
@@ -180,7 +181,7 @@ class Backend():
         # return run info
         return flask.jsonify({
             'success': True,
-            'message': 'Recommendations gereating...',
+            'message': 'Recommendations generating...',
             'data': {
                 'run_id': run_id,
                 'selected_model': selected_model,
