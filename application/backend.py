@@ -7,6 +7,7 @@ import json
 import time
 import flask
 import base64
+import pathlib
 import waitress
 import mongoengine
 import multiprocessing
@@ -17,6 +18,16 @@ import sockets
 DB_KEY = '5tay0ut!'
 
 ## BACKEND CLASS ##
+
+# backend web daemon process
+def web_run(dataset, host, port, db_host, db_port, db_name, model_run_src, prod, backend_signal_queue):
+    port = int(port)
+    db_port = int(db_port)
+    prod = bool(prod)
+    bk = Backend('static', 'templates', host, port, port + 1,
+                 dataset, db_host, db_port, db_name, model_run_src, backend_signal_queue)
+    bk.run_forever(prod)
+
 # web & websocket backend wrapper class
 class Backend():
 
@@ -28,6 +39,8 @@ class Backend():
     package_dir_path = None
     socket_process = None
     socket_signal_queue = None
+    backend_signal_queue = None
+    model_run_src = ''
     host = ''
     db_host = ''
     ws_port = 0
@@ -36,9 +49,9 @@ class Backend():
     db_port = 0
     db_local = None
     db_engine = None
-    recommendations_model = None
     # constructor
-    def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json', db_host='localhost', db_port=27017, db_name='default'):
+
+    def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json', db_host='localhost', db_port=27017, db_name='default', model_run_src='data/runs', backend_signal_queue=None):
         self.host = host
         self.db_host = db_host
         self.ws_port = ws_port
@@ -49,12 +62,15 @@ class Backend():
         self.db_engine = None
         self.socket_process = None
         self.socket_signal_queue = None
-        self.recommendations_model = None
+        self.backend_signal_queue = backend_signal_queue
+        self.model_run_src = model_run_src
         self.static_url_path = ''
         self.package_dir_path = os.path.dirname(os.path.abspath(__file__))
         self.dataset_src = os.path.join(self.package_dir_path, dataset_src)
         self.static_folder = os.path.join(self.package_dir_path, static_folder)
         self.template_folder = os.path.join(self.package_dir_path, template_folder)
+        self.model_run_dir_path = os.path.join(
+            self.package_dir_path, model_run_src)
         self.flask_app = flask.Flask(__name__,
                                      static_url_path=self.static_url_path,
                                      static_folder=self.static_folder,
@@ -67,7 +83,6 @@ class Backend():
             target=sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
         self.socket_process.start()
         self.web_run(str(production))
-        self.socket_process.join()
 
     ## DATABASE API ##
     # mongo configuration object
@@ -117,9 +132,6 @@ class Backend():
         self.db_local['genres'] = genres
         self.db_local['models'] = models
         self.db_local['config'] = config
-    # link recommendations machine learning model
-    def link_ml_model(self, recommendations_model):
-        self.recommendations_model = recommendations_model
 
     ## WEB SERVER ##
     # request decode
@@ -151,15 +163,20 @@ class Backend():
         selected_model = request_data.get('selected_model', self.db_local['config']['defaults']['selected_model'])
         playlist_selections = request_data.get('playlist_selections', self.db_local['config']['defaults']['playlist_selections'])
         genre_selections = request_data.get('genre_selections', self.db_local['config']['defaults']['genre_selections'])
-        # data preprocessing
-        target_playlists = playlist_selections
-        reject_playlists = self.recommendations_model.genres_to_playlists(self.recommendations_model.genre_set_invert(genre_selections), False)
-        inference_playlists = self.recommendations_model.genres_to_playlists(genre_selections, False)
         # create model run record
         ts_created = time.time()
         run_id = self.database_new_model_run(selected_model, playlist_selections, genre_selections, "created", ts_created, 0,0,0,0)
-        # run model to generate recommendations
-        self.recommendations_model.generate_recommendations_proc(run_id, target_playlists, reject_playlists, inference_playlists)
+        request_data = {
+            "run_id": run_id,
+            "selected_model": selected_model,
+            "playlist_selections": playlist_selections,
+            "genre_selections": genre_selections
+        }
+        model_run_path = pathlib.Path(os.path.join(self.model_run_dir_path, run_id))
+        model_run_path.mkdir(parents=True, exist_ok=True)
+        with open(model_run_path / 'request.json', 'w') as f:
+            json.dump(request_data, f, indent=4, sort_keys=False)
+        self.backend_signal_queue.put("main:recommendations-run:{}".format(run_id))
         # return run info
         return flask.jsonify({
             'success': True,

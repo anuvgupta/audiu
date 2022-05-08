@@ -75,13 +75,9 @@ class Recommendations():
     package_dir_path = None
     model_run_src = None
     model_run_dir_path = None
-    model_run_procs = []
-    model_run_signal_queues = None
     # constructor
     def __init__(self, dataset_src='dataset.json', model_run_src='data/runs'):
         self.dataset = {}
-        self.model_run_procs = {}
-        self.model_run_signal_queues = {}
         self.model_run_src = model_run_src
         self.package_dir_path = os.path.dirname(os.path.abspath(__file__))
         self.dataset_src = os.path.join(self.package_dir_path, dataset_src)
@@ -130,9 +126,24 @@ class Recommendations():
         return genres_inverse
 
     # process fork for generating recommendations
-    def generate_recommendations_proc(self, run_id, target_playlists, reject_playlists, inference_playlists):
+    def generate_recommendations_proc_prepare(self, run_id):
         model_run_path = pathlib.Path(os.path.join(self.model_run_dir_path, run_id))
         model_run_path.mkdir(parents=True, exist_ok=True)
+        request_json = None
+        with open(model_run_path / 'request.json', 'r') as f:
+            request_json = json.load(f)
+        request_data = {
+            "run_id": run_id,
+            "selected_model": request_json['selected_model'],
+            "playlist_selections": request_json['playlist_selections'],
+            "genre_selections": request_json['genre_selections']
+        }
+        # # data preprocessing
+        target_playlists = request_data['playlist_selections']
+        reject_playlists = self.genres_to_playlists(
+            self.genre_set_invert(request_data['genre_selections']), False)
+        inference_playlists = self.genres_to_playlists(
+            request_data['genre_selections'], False)
         input_data = {
             "run_id": run_id,
             "target_playlists": target_playlists,
@@ -141,9 +152,5 @@ class Recommendations():
         }
         with open(model_run_path / 'input.json', 'w') as f:
             json.dump(input_data, f, indent=4, sort_keys=False)
-        self.model_run_signal_queues[run_id] = multiprocessing.Queue(10)
-        self.model_run_procs[run_id] = multiprocessing.Process(target=generate_recommendations_proc_fork, args=(
-            str(self.model_run_src), self.model_run_signal_queues[run_id]))
-        self.model_run_procs[run_id].start()
         # TODO: setup queue event or listener or somehow tell socket process to keep checking on this queue to notify user if they are still online
         
