@@ -155,5 +155,4 @@ class Recommendations():
         }
         with open(model_run_path / 'input.json', 'w') as f:
             json.dump(input_data, f, indent=4, sort_keys=False)
-        # TODO: setup queue event or listener or somehow tell socket process to keep checking on this queue to notify user if they are still online
         

@@ -19,15 +19,13 @@ PROD = True
 
 ## MAIN ##
 # main entry point
-
-
 def main():
     recommendations_model = recommendations.Recommendations(
         DATASET, MODEL_RUN_SRC)
     recommendations_model.load_dataset()
     model_run_procs = {}
     model_run_signal_queues = {}
-    backend_signal_queue = multiprocessing.Queue(10)
+    backend_signal_queue = multiprocessing.Queue(20)
     backend_process = multiprocessing.Process(
         target=backend.web_run, args=(str(DATASET), str(HOST), str(PORT), str(DB_HOST), str(DB_PORT), str(DB_NAME), str(MODEL_RUN_SRC), str(PROD), backend_signal_queue))
     backend_process.start()
@@ -78,9 +76,15 @@ def main():
                     print(model_run_procs)
             
     except Exception as e:
-        # TODO: send msg to queues and join procs
-        backend_signal_queue.put("backend:quit")
-        backend_process.join()
+        pass
+    for run_id, model_run_signal_queue in model_run_signal_queues.items():
+        if model_run_signal_queue != None:
+            model_run_signal_queue.put("run:quit")
+    for run_id, model_run_proc in model_run_procs.items():
+        if model_run_proc != None:
+            model_run_proc.join()
+    backend_signal_queue.put("backend:quit")
+    backend_process.join()
 
 # thread entry point
 if __name__ == "__main__":
