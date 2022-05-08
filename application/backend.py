@@ -132,6 +132,11 @@ class Backend():
             config=self.json_encode(self.db_local['config']),
             genres=self.json_encode(list(self.db_local['genres'].keys())),
             models=self.json_encode(self.db_local['models']))
+    # TODO: create route for viewing run output
+    def view_run(self):
+        # TODO: read output file and return data
+        # if output file doesnt exist, its not done, so print a laoding symbol and time elapsed
+        pass
     # web model api route
     def view_model(self):
         # parse request data
@@ -153,17 +158,18 @@ class Backend():
         # create model run record
         ts_created = time.time()
         run_id = self.database_new_model_run(selected_model, playlist_selections, genre_selections, "created", ts_created, 0,0,0,0)
-        # # run model to generate recommendations
+        # run model to generate recommendations
         self.recommendations_model.generate_recommendations_proc(run_id, target_playlists, reject_playlists, inference_playlists)
         # return run info
         return flask.jsonify({
             'success': True,
-            'message': 'Recommendations generated.',
+            'message': 'Recommendations gereating...',
             'data': {
                 'run_id': run_id,
                 'selected_model': selected_model,
                 'playlist_selections': playlist_selections,
-                'genre_selections': genre_selections
+                'genre_selections': genre_selections,
+                "ts_created": ts_created
             }
         })
     # convenience conversion

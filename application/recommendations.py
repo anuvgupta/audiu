@@ -75,10 +75,12 @@ class Recommendations():
     package_dir_path = None
     model_run_src = None
     model_run_dir_path = None
+    model_run_procs = []
     model_run_signal_queues = None
     # constructor
     def __init__(self, dataset_src='dataset.json', model_run_src='data/runs'):
         self.dataset = {}
+        self.model_run_procs = {}
         self.model_run_signal_queues = {}
         self.model_run_src = model_run_src
         self.package_dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -140,5 +142,8 @@ class Recommendations():
         with open(model_run_path / 'input.json', 'w') as f:
             json.dump(input_data, f, indent=4, sort_keys=False)
         self.model_run_signal_queues[run_id] = multiprocessing.Queue(10)
-        multiprocessing.Process(target=generate_recommendations_proc_fork, args=(str(self.model_run_src), self.model_run_signal_queues[run_id]))
-        # TODO: start process and check for completeness while allowing Flask to serve
+        self.model_run_procs[run_id] = multiprocessing.Process(target=generate_recommendations_proc_fork, args=(
+            str(self.model_run_src), self.model_run_signal_queues[run_id]))
+        self.model_run_procs[run_id].start()
+        # TODO: setup queue event or listener or somehow tell socket process to keep checking on this queue to notify user if they are still online
+        
