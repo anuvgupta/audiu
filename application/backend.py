@@ -19,17 +19,18 @@ DB_KEY = '5tay0ut!'
 
 ## BACKEND CLASS ##
 
-# backend web daemon process
-def web_run(dataset, host, port, db_host, db_port, db_name, model_run_src, prod, backend_signal_queue):
-    port = int(port)
-    db_port = int(db_port)
-    prod = bool(prod)
-    bk = Backend('static', 'templates', host, port, port + 1,
-                 dataset, db_host, db_port, db_name, model_run_src, backend_signal_queue)
-    bk.run_forever(prod)
-
 # web & websocket backend wrapper class
 class Backend():
+
+    # backend web daemon process
+    @staticmethod
+    def web_run(dataset, host, port, db_host, db_port, db_name, model_run_src, prod, backend_signal_queue):
+        port = int(port)
+        db_port = int(db_port)
+        prod = bool(prod)
+        bk = Backend('static', 'templates', host, port, port + 1,
+                    dataset, db_host, db_port, db_name, model_run_src, backend_signal_queue)
+        bk.run_forever(prod)
 
     # instance fields
     flask_app = None
@@ -50,7 +51,6 @@ class Backend():
     db_local = None
     db_engine = None
     # constructor
-
     def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json', db_host='localhost', db_port=27017, db_name='default', model_run_src='data/runs', backend_signal_queue=None):
         self.host = host
         self.db_host = db_host
@@ -77,12 +77,12 @@ class Backend():
                                      template_folder=self.template_folder)
     # start both servers in parallel & connect to db
     def run_forever(self, production=False):
-        self.database_run(str(production))
+        self.database_init(str(production))
         self.socket_signal_queue = multiprocessing.Queue(10)
         self.socket_process = multiprocessing.Process(
-            target=sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
+            target=sockets.Sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
         self.socket_process.start()
-        self.web_run(str(production))
+        self.web_serve(str(production))
 
     ## DATABASE API ##
     # mongo configuration object
@@ -106,7 +106,7 @@ class Backend():
         new_model_run.save(force_insert=True)
         return str(new_model_run.id)
     # import dataset & connect to db
-    def database_run(self, production='False'):
+    def database_init(self, production='False'):
         production = bool(production)
         # mongo init
         self.db_engine = flask_mongoengine.MongoEngine()
@@ -197,7 +197,7 @@ class Backend():
         self.flask_app.add_url_rule(
             "/model", "model", view_func=self.view_model, methods=['POST'])
     # web server start
-    def web_run(self, production='False'):
+    def web_serve(self, production='False'):
         production = bool(production)
         self.bind_routes()
         if production:

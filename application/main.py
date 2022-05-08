@@ -1,10 +1,10 @@
 # AUDIU
 # main.py
 
+import queue
 import multiprocessing
 
 # local imports
-import queue
 import backend
 import recommendations
 
@@ -27,7 +27,7 @@ def main():
     model_run_signal_queues = {}
     backend_signal_queue = multiprocessing.Queue(20)
     backend_process = multiprocessing.Process(
-        target=backend.web_run, args=(str(DATASET), str(HOST), str(PORT), str(DB_HOST), str(DB_PORT), str(DB_NAME), str(MODEL_RUN_SRC), str(PROD), backend_signal_queue))
+        target=backend.Backend.web_run, args=(str(DATASET), str(HOST), str(PORT), str(DB_HOST), str(DB_PORT), str(DB_NAME), str(MODEL_RUN_SRC), str(PROD), backend_signal_queue))
     backend_process.start()
     try:
         while True:
