@@ -50,6 +50,20 @@ input.playlist-input {
     outline: none;
 }
 
+input.genre-input {
+    padding: 10px 20px;
+    font-size: 25px;
+    display: block;
+    margin: 20px auto;
+    max-width: 600px;
+    width: 85%;
+    background-color: #222;
+    border-radius: 3px;
+    border: 2px solid #333;
+    color: white;
+    outline: none;
+}
+
 div.bootbox.modal {
     text-align: left;
 }

@@ -168,6 +168,36 @@ var app = {
         config: {
             dataset: {}
         },
+        genre_correction: (genre) => {
+            var genre_replacements = app.main.config.dataset.config.genre_replacements;
+            genre = genre.replaceAll('_', ' ');
+            for (var genre_repl in genre_replacements)
+                genre = genre.replaceAll(genre_repl, genre_replacements[genre_repl]);
+            return genre;
+        },
+        reverse_genre_correction: (genre) => {
+            var genre_replacements = app.main.config.dataset.config.genre_replacements;
+            for (var genre_repl in genre_replacements)
+                genre = genre.replaceAll(genre_replacements[genre_repl], genre_repl);
+            genre = genre.replaceAll(' ', '_');
+            return genre;
+        },
+        get_genre_list: () => {
+            var remove_item = app.main.config.dataset.config.genre_remove_item;
+            var genres_list = app.main.config.dataset.genres.slice(0);
+            genres_list.splice(genres_list.indexOf(remove_item), 1);
+            for (var g in genres_list)
+                genres_list[g] = app.main.genre_correction(genres_list[g]);
+            return genres_list;
+        },
+        get_genre_list_str: () => {
+            var remove_item = app.main.config.dataset.config.genre_remove_item;
+            var genres_list = app.main.config.dataset.genres.slice(0);
+            genres_list.splice(genres_list.indexOf(remove_item), 1);
+            genres_list = genres_list.join(', ');
+            genres_list = app.main.genre_correction(genres_list);
+            return genres_list;
+        },
         init: (_) => {
             console.clear();
             console.log("[main] loading...");

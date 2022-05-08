@@ -52,12 +52,18 @@ class Backend():
     def database_init(self, production=False):
         playlists = None
         genres = None
+        config = None
+        models = None
         with open(self.dataset_src) as dataset_file:
             dataset_json = json.load(dataset_file)
             playlists = dataset_json['playlists']
             genres = dataset_json['genres']
+            models = dataset_json['models']
+            config = dataset_json['config']
         self.db_local['playlists'] = playlists
         self.db_local['genres'] = genres
+        self.db_local['models'] = models
+        self.db_local['config'] = config
     # convenience function
     def json_encode(self, obj, charset='ascii'):
         return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)
@@ -65,7 +71,7 @@ class Backend():
     ## WEB SERVER ##
     # web home page route
     def view_home(self):
-        return flask.render_template("index.html", genres=self.json_encode(list(self.db_local['genres'].keys())))
+        return flask.render_template("index.html", config=self.json_encode(self.db_local['config']), genres=self.json_encode(list(self.db_local['genres'].keys())), models=self.json_encode(self.db_local['models']))
     # web model api route
     def view_model(self):
         try:

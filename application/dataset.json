@@ -1,4 +1,11 @@
 {
+    "config": {
+        "genre_remove_item": "mixed",
+        "genre_replacements": {
+            "r n b": "r & b",
+            "pop punk emo": "pop punk/emo pop"
+        }
+    },
     "playlists": {
         "rapcaviar": "37i9dQZF1DX0XUsuxWHRQd",
         "hot_country": "37i9dQZF1DX1lVhptIYRda",
@@ -192,33 +199,48 @@
     },
     "genres": {
         "mixed": ["top_songs_usa", "todays_top_hits", "new_music_friday","new_music_now","top_50_usa","top_50_global","top_50_united_kingdom"],
-        "edm": ["edm","edm_hits", "edm_samplings", "planet_rave"],
+        
         "pop": ["just_hits","pop_party", "night_pop", "dance_pop_hits", "pop_drive", "pop_gems", "pumped_pop", "pop_rising", "soft_pop_hits"],
-        "rock": ["rock_this", "rock_solid", "rock_this_2017", "rock_party", "rock_hard", "one_more_rep", "rock_ballads", "rock_me_up"],
-        "alternative_rock": ["new_noise", "alternative_noise", "the_new_alt", "you_n_me", "its_alt_good", "license_to_chill", "new_alt_rock_mixtape", "essential_alternative", "new_alternative", "most_precious_gems"],
-        "indie_pop": ["soak_up_the_sun","rockin_vibes","indie_pop_2010s","indie_pop", "indie_pop_2000s", "feel_good_indie_rock","indie_pop_summer_21_maine","indie_pop_n_chill","ultimate_indie"],
-        "dreampop": ["shoegaze_now", "shoegaze_classics","bedroom_pop","dreampop", "dreampop_classics", "shoegaze_ambient","indie_sunshine"],
-        "pop_rock": ["90s_pop_rock","pop_rock", "10s_pop_rock", "00s_pop_rock", "pop_rock_run","pop_rock_shot","fun_run"],
+        "r_n_b": ["r_n_b_favorites", "are_n_be", "bae", "alternative_r_n_b", "chilled_r_n_b", "sweet_suite","r_n_b_classics", "r_n_b_party","r_n_b_right_now","r_n_b_workout"],
         "hip_hop": ["hip_hop_favorites", "mind_right", "westside_story", "no_cap", "alternative_hip_hop", "workout_twerkout"],
         "rap": ["rapcaviar", "signed_xoxo", "get_turnt", "most_necessary", "power_workout", "state_of_mind"],
         "old_school_hip_hop": ["gold_school", "old_school_hip_hop_house_party","i_love_my_90s_hip_hop","raised_on_hip_hop","i_love_my_80s_hip_hop"],
-        "latin": ["viva_latino", "dancehall_official","50_latin_classics", "90s_latino","chill_latino","latin_party_anthems","latin_pop_rising","latin_r_n_b"],
-        "electronic": ["alternative_beats", "trap_mojito", "dubstep_don","dance_electronic_mix","electronic_x","generation_electronica"],
-        "house": ["housewerk", "deep_house_relax", "uk_house_music", "37i9dQZF1DX1tW4VlEfDSS"],
-        "r_n_b": ["r_n_b_favorites", "are_n_be", "bae", "alternative_r_n_b", "chilled_r_n_b", "sweet_suite","r_n_b_classics", "r_n_b_party","r_n_b_right_now","r_n_b_workout"],
-        "country": ["hot_country", "new_boots", "wild_country", "country_gold", "country_coffeehouse", "country_nights","2000s_country","country_cookout"],
-        "classical": ["peaceful_piano","calming_classical","classical_essentials","dark_academia_classical","epic_classical","not_quite_classical","classical_reading","iconic_soundtracks"],
+        
+        "rock": ["rock_this", "rock_solid", "rock_this_2017", "rock_party", "rock_hard", "one_more_rep", "rock_ballads", "rock_me_up"],
         "metal": ["nu_metal_era","metal_essentials","all_new_metal","old_school_metal","heavy_metal","kickass_metal","metal_empire","progressive_metal", "metal_rewind"],
-        "blues": ["dirty_rock","blues_classics", "modern_blues_rock","jazz_blues","black_coffee_blues","blues_on_the_rocks","blues_roots","morning_blues"],
         "classic rock": ["rock_classics", "classic_rock_workout", "psychedelic_rock", "classic_rock_drive", "80s_hard_rock", "70s_rock_anthems", "raised_on_rock", "old_school_metal","pure_rock_n_roll","the_road_to_punk_rock"],
         "punk_rock": ["classic_hardcore","punk_essentials","punk_rock_workout","garage_rock_revival","the_punk_list","covered_in_punk"],
+        
+        "pop_rock": ["90s_pop_rock","pop_rock", "10s_pop_rock", "00s_pop_rock", "pop_rock_run","pop_rock_shot","fun_run"],
         "pop_punk_emo": ["the_scene","emo_forever", "pop_punk_powerhouses","pop_punks_not_dead","all_things_post","pure_pop_punk"],
+        "alternative_rock": ["new_noise", "alternative_noise", "the_new_alt", "you_n_me", "its_alt_good", "license_to_chill", "new_alt_rock_mixtape", "essential_alternative", "new_alternative", "most_precious_gems"],
+        "indie_pop": ["soak_up_the_sun","rockin_vibes","indie_pop_2010s","indie_pop", "indie_pop_2000s", "feel_good_indie_rock","indie_pop_summer_21_maine","indie_pop_n_chill","ultimate_indie"],
+        "dreampop": ["shoegaze_now", "shoegaze_classics","bedroom_pop","dreampop", "dreampop_classics", "shoegaze_ambient","indie_sunshine"],
+        
+        "edm": ["edm","edm_hits", "edm_samplings", "planet_rave"],
         "dance": ["mint", "dance_hits", "pop_remix", "creamy", "dance_classics","big_room_dance","fresh_dance_pop"],
+        "electronic": ["alternative_beats", "trap_mojito", "dubstep_don","dance_electronic_mix","electronic_x","generation_electronica"],
+        "house": ["housewerk", "deep_house_relax", "uk_house_music", "37i9dQZF1DX1tW4VlEfDSS"],
         "afro": ["african_heat", "we_everywhere","afro_hits","afrobeats_mix","afro_indie","afro_party_anthems","classic_afropop","afropop"],
+        "latin": ["viva_latino", "dancehall_official","50_latin_classics", "90s_latino","chill_latino","latin_party_anthems","latin_pop_rising","latin_r_n_b"],    
+        
+        "blues": ["dirty_rock","blues_classics", "modern_blues_rock","jazz_blues","black_coffee_blues","blues_on_the_rocks","blues_roots","morning_blues"],
+        "country": ["hot_country", "new_boots", "wild_country", "country_gold", "country_coffeehouse", "country_nights","2000s_country","country_cookout"],
+        
         "2000s": ["all_out_2000s", "00s_rock_anthems", "i_love_my_2000s_r_n_b","2000s_heartache"],
         "90s": ["all_out_90s", "90s_rock_anthems", "i_love_my_90s_r_n_b"],
         "80s": ["all_out_80s", "80s_pop_rock"],
         "70s": ["all_out_70s"],
-        "60s": ["all_out_60s"]
+        "60s": ["all_out_60s"],
+
+        "classical": ["peaceful_piano","calming_classical","classical_essentials","dark_academia_classical","epic_classical","not_quite_classical","classical_reading","iconic_soundtracks"]
+
+    },
+    "models": {
+        "nn_stacked": "Neural Forest",
+        "nn_baseline": "Neural Network",
+        "gradient_boost": "Intuitive Forest",
+        "random_forest": "Decision Forest",
+        "k_neighbors": "Neighbor Vote"
     }
 }

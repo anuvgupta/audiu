@@ -76,6 +76,8 @@ app
                         block.css('height', height + 'px')
                     }
                 div page1
+                    css
+                        display block
                     {
                         block.key('playlist_selections', []);
                     }
@@ -126,13 +128,18 @@ app
                             display block
                             line-height 120%
                     text subprompt
-                        html [&nbsp;spotify playlist link, ie. <a class='link-white' target='_blank' href='https://open.spotify.com/playlist/5ghFHvZmV4FDK5YLeZQRu9'>https://open.spotify.com/playlist/5ghFHvZmV4FDK5YLeZQRu9</a>&nbsp;]
+                        html [&nbsp;spotify playlist link, ie. <a class='link-white' style='font-weight:bold;' target='_blank' href='https://open.spotify.com/playlist/5ghFHvZmV4FDK5YLeZQRu9'>https://open.spotify.com/playlist/5ghFHvZmV4FDK5YLeZQRu9</a>&nbsp;]
                         css
                             color white
                             font-size 17px
                             display block
                             margin-top 15px
                             line-height 120%
+                            width 90%
+                            max-width 700px
+                            margin-left auto
+                            margin-right auto
+                            //font-style italic
                     input playlist_input
                         placeholder https://open.spotify.com/playlist/5ghFHvZmV4FDK5YLeZQRu9
                         class playlist-input
@@ -142,9 +149,12 @@ app
                             }
                         :input
                             {
-                                block.sibling('extra_inputs').on('update_num_inputs');
+                                block.sibling('extra_inputs').key('refocus', 0).on('update_num_inputs');
                             }
                     div extra_inputs
+                        {
+                            block.key('refocus', 0);
+                        }
                         :update_num_inputs
                             {
                                 var generate_input_block = (num, text = '') => {
@@ -184,13 +194,14 @@ app
                                     block.add(generate_input_block(i, input_vals[i]));
                                 }
                                 setTimeout(_ => {
-                                    var refocus_num = 0;
-                                    var refocus_num_load = block.key('refocus');
-                                    if (refocus_num_load) refocus_num = refocus_num_load;
-                                    var refocus_b = block.child(`input_${refocus_num}`);
-                                    if (refocus_b) {
-                                        refocus_b.node().focus();
+                                    var refocus_num = block.key('refocus');
+                                    var refocus_b = null;
+                                    if (refocus_num > 0) {
+                                        refocus_b = block.child(`input_${refocus_num}`);
+                                    } else {
+                                        refocus_b = block.sibling('playlist_input');;
                                     }
+                                    if (refocus_b) refocus_b.node().focus();
                                 }, 10);
                             }
                         :empty
@@ -227,7 +238,7 @@ app
                                 }
                                 console.log("selected playlists: ");
                                 console.log(values);
-                                block.key('playlist_selections', values);
+                                block.parent().key('playlist_selections', values);
                                 if (values.length > 0) {
                                     block.parent().on('hide')
                                         .sibling('page2').on('show');
@@ -235,6 +246,9 @@ app
                                 event.stopPropagation();
                             }
                 div page2
+                    {
+                        block.key('genre_selections', []);
+                    }
                     :hide
                         css
                             display none
@@ -243,10 +257,144 @@ app
                             display block
                     css
                         display none
-                        height 60px
-                        width 50%
-                        background-color red
                         margin 0 auto
+                    text hook1
+                        html i like what i'm hearing already!
+                        css
+                            color white
+                            font-size 27px
+                            display block
+                            margin-top 15px
+                            line-height 120%
+                    text hook2
+                        html pick your 5 top genres to help me find better tracks for you!
+                        css
+                            color white
+                            font-size 20px
+                            display block
+                            margin-top 15px
+                            line-height 120%
+                            font-style italic
+                    div spacer_form
+                        css
+                            height 20px
+                    div image
+                        image img
+                            height 30px
+                            width 30px
+                            src img/waveform_w.png
+                            class rotating2_n
+                            css
+                                margin 0 auto
+                                -webkit-transform scaleY(-1)
+                                transform scaleY(-1)
+                    div spacer2-5
+                        css
+                            height 10px
+                    text prompt
+                        val while i'm listening, what's your vibe?
+                        css
+                            color white
+                            font-size 35px
+                            display block
+                            line-height 120%
+                    text subprompt
+                        {
+                            block.html(`[&nbsp; <b>genres:</b> ${app.main.get_genre_list_str()} &nbsp;]`);
+                        }
+                        css
+                            color white
+                            font-size 17px
+                            display block
+                            margin-top 15px
+                            line-height 120%
+                            width 90%
+                            max-width 700px
+                            margin-left auto
+                            margin-right auto
+                            //font-style italic
+                    input genre_input
+                        placeholder dreampop
+                        class genre-input
+                        #value
+                            {
+                                block.node().value = value;
+                            }
+                        :input
+                            {
+                                //if (event.keyCode == 13) {
+                                    block.sibling('extra_inputs').key('refocus', 0).on('update_num_inputs', { genres_filter_enable: false });
+                                //}
+                            }
+                    div extra_inputs
+                        {
+                            block.key('refocus', 0);
+                        }
+                        :update_num_inputs
+                            {
+                                var genres_filter_enable = data.genres_filter_enable;
+                                var genres_list = app.main.get_genre_list();
+                                var generate_input_block = (num, text = '') => {
+                                    var bl = Block('input', `input_${num}`);
+                                    bl.attribute('placeholder', `${genres_list[util.rand_int(0, genres_list.length - 1)]}`);
+                                    bl.node().value = text;
+                                    bl.on('input', (e, b, d) => {
+                                        //if (e.keyCode == 13) {
+                                            block.key('refocus', num);
+                                            block.on('update_num_inputs', { genres_filter_enable: false });
+                                        //}
+                                    });
+                                    bl.class('genre-input');
+                                    return bl;
+                                };
+                                var input_vals = [];
+                                var first_val = block.sibling('genre_input').node().value;
+                                if (first_val && (`${first_val}`).trim() != '') {
+                                    if (!genres_filter_enable || genres_list.includes(first_val)) {
+                                        input_vals.push((`${first_val}`));
+                                    }
+                                }
+                                var children = block.children();
+                                for (var c in children) {
+                                    if (children[c].mark().includes('input_')) {
+                                        var child_val = children[c].node().value;
+                                        if (child_val && (`${child_val}`).trim().length > 0) {
+                                            if (!genres_filter_enable || genres_list.includes(child_val)) {
+                                                input_vals.push((`${child_val}`));
+                                            }
+                                        }
+                                    }
+                                }
+                                if (input_vals.length <= 0) {
+                                    block.sibling('genre_input').data({ value: first_val });
+                                    block.sibling('genre_input').data({ value: '' });
+                                    block.on('empty');
+                                    return;
+                                }
+                                block.html('');
+                                input_vals.push('');
+                                block.sibling('genre_input').data({ value: input_vals[0] });
+                                for (var i = 1; i < input_vals.length; i++) {
+                                    block.add(generate_input_block(i, input_vals[i]));
+                                }
+                                setTimeout(_ => {
+                                    var refocus_num = block.key('refocus');
+                                    var refocus_b = null;
+                                    if (refocus_num > 0) {
+                                        refocus_b = block.child(`input_${refocus_num}`);
+                                    } else {
+                                        refocus_b = block.sibling('genre_input');
+                                    }
+                                    if (refocus_b) refocus_b.node().focus();
+                                }, 10);
+                            }
+                        :empty
+                            {
+                                block.html('').add(Block('div', 'spacer').css('height', '5px'));
+                                event.stopPropagation();
+                            }
+                        div spacer
+                            height 5px
                     button submit_btn
                         class mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored
                         html GO
@@ -258,6 +406,166 @@ app
                             height 50px
                             width 100px
                             border-radius 3px
+                        :click
+                            {
+                                var genres_list = app.main.get_genre_list();
+                                block.sibling('extra_inputs').on('update_num_inputs', { genres_filter_enable: true });
+                                var _next = _ => {
+                                    var values = [];
+                                    var value_first = block.sibling('genre_input').node().value;
+                                    if (value_first && (`${value_first}`).trim().length > 0) {
+                                        if (genres_list.includes(value_first))
+                                            values.push(value_first);
+                                    }
+                                    var extra_inputs = block.sibling('extra_inputs').children();
+                                    for (var c in extra_inputs) {
+                                        if (extra_inputs[c].mark().includes('input_')) {
+                                            var value_next = extra_inputs[c].node().value;
+                                            if (value_next && (`${value_next}`).trim().length > 0)
+                                                if (genres_list.includes(value_next))
+                                                    values.push(value_next);
+                                        }
+                                    }
+                                    console.log("selected genres: ");
+                                    console.log(values);
+                                    block.parent().key('genre_selections', values);
+                                    if (values.length < 5) {
+                                        app.ui.display_modal.generic_confirm('Not Enough Vibes', 'Please choose at least 5 genres!', (s) => {
+                                            //console.log(s);
+                                        });
+                                    } else {
+                                        block.parent().on('hide')
+                                            .sibling('page3').on('show');
+                                    }
+                                };
+                                setTimeout(_next, 50);
+                                event.stopPropagation();
+                            }
+                div page3
+                    {
+                        block.key('genre_selections', []);
+                    }
+                    :hide
+                        css
+                            display none
+                    :show
+                        css
+                            display block
+                    css
+                        display none
+                        margin 0 auto
+                    text hook1
+                        html one last thing — pick my brain...
+                        css
+                            color white
+                            font-size 27px
+                            display block
+                            margin-top 15px
+                            line-height 120%
+                    text hook2
+                        html as an AI i have a few different brains—which one should i use?
+                        css
+                            color white
+                            font-size 20px
+                            display block
+                            margin-top 15px
+                            line-height 120%
+                            font-style italic
+                    div spacer_form
+                        css
+                            height 20px
+                    div image
+                        image img
+                            height 30px
+                            width 30px
+                            src img/waveform_w.png
+                            class rotating2_n
+                            css
+                                margin 0 auto
+                                -webkit-transform scaleY(-1)
+                                transform scaleY(-1)
+                    div spacer2-5
+                        css
+                            height 10px
+                    select model_selector
+                        css
+                            display block
+                            margin 0 auto
+                            width 90%
+                            max-width 400px
+                            height 50px
+                            padding 10px 10px
+                            box-sizing border-box
+                            margin-top 15px
+                            margin-bottom 30px
+                            border-radius 4px
+                            cursor pointer
+                            outline none
+                            background-color #202020
+                            border 1px solid #444
+                            color white
+                            font-size 18px
+                        {
+                            for (var model_slug in app.main.config.dataset.models) {
+                                var model_name = app.main.config.dataset.models[model_slug];
+                                // console.log(model_slug, model_name);
+                                var option_line = `${model_name} — ${model_slug.replaceAll('_', ' ')}`;
+                                block.add(Block('option', `option_${model_slug}`)
+                                    .attribute('value', `${model_slug}`)
+                                    .html(`${option_line}`)
+                                );
+                            }
+                        }
+                    button submit_btn
+                        class mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored
+                        html GO
+                        css
+                            outline none
+                            background-color #333
+                            font-size 17px
+                            letter-spacing 2px
+                            height 50px
+                            width 100px
+                            border-radius 3px
+                        :click
+                            {
+                                var selected_model = block.sibling('model_selector').node().value;
+                                if (selected_model && (`${selected_model}`).trim().length > 0) {
+                                    // gather all data
+                                    var playlist_selections = block.parent().sibling('page1').key('playlist_selections');
+                                    var genre_selections = block.parent().sibling('page2').key('genre_selections');
+                                    console.log(selected_model, playlist_selections, genre_selections);
+                                    block.parent().on('hide')
+                                        .sibling('page4').on('show');
+                                }
+                                event.stopPropagation();
+                            }
+                div page4
+                    :hide
+                        css
+                            display none
+                    :show
+                        css
+                            display block
+                    css
+                        display none
+                        margin 0 auto
+                    div spacer_form
+                        css
+                            height 20px
+                    div image
+                        image img
+                            height 30px
+                            width 30px
+                            src img/waveform_w.png
+                            class rotating1
+                            css
+                                margin 0 auto
+                                -webkit-transform scaleY(-1)
+                                transform scaleY(-1)
+                    div spacer2-5
+                        css
+                            height 10px
             div spacer3
                 css
                     height 50px 

@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="rotation.css" />
     <link rel="stylesheet" href="style.css" />
     <script type="text/javascript">
+        app.main.config.dataset.config = util.json_decode("{{ config }}");
+        app.main.config.dataset.models = util.json_decode("{{ models }}");
         app.main.config.dataset.genres = util.json_decode("{{ genres }}");
     </script>
 </head>
