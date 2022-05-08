@@ -64,6 +64,7 @@ def main():
                         print(model_run_procs)
                     elif "main:run-done" in msg:
                         target_run_id = msg.split(":")[2]
+                        model_run_procs[target_run_id].join()
                         model_run_procs[target_run_id] = None
                         model_run_signal_queues[target_run_id] = None
                         print("model run processes:")
