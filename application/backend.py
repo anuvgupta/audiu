@@ -109,7 +109,7 @@ class Backend():
                         ts_created=ts_created, ts_complete=ts_complete, time_total=time_total, time_training=time_training, time_inference=time_inference,)
         new_model_run.save(force_insert=True)
         return str(new_model_run.id)
-    # check model run status in database
+    # get model run from database
     def database_check_model_run(self, run_id):
         query = Backend.ModelRun.objects(model_run_id__exact=run_id)
         if len(query) != 1:

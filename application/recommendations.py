@@ -13,7 +13,7 @@ class Recommendations():
     # static methods
     # generate recommendations
     @staticmethod
-    def generate_recommendations(run_id, target_playlists, reject_playlists, inference_playlists):
+    def generate_recommendations(run_id, model_type, target_playlists, reject_playlists, inference_playlists):
         # TODO: actually generate recommendations using ml models
         results = []
         # training
@@ -45,11 +45,13 @@ class Recommendations():
         input_data_json = None
         with open(model_run_path / 'input.json', 'r') as f:
             input_data_json = json.load(f)
+        model_type = input_data_json["model_type"]
         target_playlists = input_data_json["target_playlists"]
         reject_playlists = input_data_json["reject_playlists"]
         inference_playlists = input_data_json["inference_playlists"]
         input_data = {
             "run_id": run_id,
+            "model_type": model_type,
             "target_playlists": target_playlists,
             "reject_playlists": reject_playlists,
             "inference_playlists": inference_playlists
@@ -57,9 +59,10 @@ class Recommendations():
         print("generating recommendations for run {}".format(run_id))
         # print(input_data)
         results, ts_profile = Recommendations.generate_recommendations(
-            run_id, target_playlists, reject_playlists, inference_playlists)
+            run_id, model_type, target_playlists, reject_playlists, inference_playlists)
         output_data = {
             "run_id": run_id,
+            "model_type": model_type,
             "results": results,
             "ts_profile": {
                 "ts_total_length": ts_profile[0],
@@ -141,6 +144,7 @@ class Recommendations():
             "genre_selections": request_json['genre_selections']
         }
         # # data preprocessing
+        model_type = request_data["selected_model"]
         target_playlists = request_data['playlist_selections']
         reject_playlists = self.genres_to_playlists(
             self.genre_set_invert(request_data['genre_selections']), False)
@@ -148,6 +152,7 @@ class Recommendations():
             request_data['genre_selections'], False)
         input_data = {
             "run_id": run_id,
+            "model_type": model_type,
             "target_playlists": target_playlists,
             "reject_playlists": reject_playlists,
             "inference_playlists": inference_playlists
