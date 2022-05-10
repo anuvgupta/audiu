@@ -607,7 +607,21 @@ app
                             height 20px
                     #target_run_id
                         {
-                            console.log(target_run_id);
+                            app.web.api.check_recommendations_status(target_run_id, (data) => {
+                                if (data.run_id == target_run_id) {
+                                    if (data.run_status == "created" || data.run_status == "running") {
+                                        block.child('data_out/results_loading').on('show');
+                                        block.child('data_out/subtext').on('show');
+                                    } else if (data.run_status == "complete") {
+                                        block.child('data_out/image').css('display', 'none');
+                                    } else if (data.run_status == "error") {
+                                        block.child('data_out/results_loading/text').html('').data('sorry about that!');
+                                        block.child('data_out/subtext').html('').html('an AI error occurred...<br/><span style="font-size: 14px;">please head back and try again</span>');
+                                        block.child('data_out/results_loading').on('show');
+                                        block.child('data_out/subtext').on('show');
+                                    }
+                                }
+                            });
                         }
                     block data_out
                         css
@@ -622,8 +636,28 @@ app
                             css
                                 height 10px
                         div results_loading
+                            css
+                                display none
+                                opacity 0
+                                transition opacity 0.35s ease
+                            :show
+                                {
+                                    block.css('display', 'block');
+                                    setTimeout(_ => {
+                                        block.css('opacity', '1');
+                                    }, 50);
+                                }
+                            :hide
+                                {
+                                    setTimeout(_ => {
+                                        block.css('opacity', '0');
+                                        setTimeout(_ => {
+                                            block.css('display', 'none');
+                                        }, 360);
+                                    }, 50);
+                                }
                             text text
-                                val i'm still listening...
+                                val i'm still listening!
                                 css
                                     color #fafafa
                                     font-size 24px
@@ -658,11 +692,30 @@ app
                             css
                                 height 30px
                         text subtext
-                            html refresh for results!<br/><span style="font-size: 14px;">or bookmark this page and check later</span>
+                            html refresh for results...<br/><span style="font-size: 14px;">or bookmark page and check later</span>
                             css
                                 color #f0f0f0
                                 font-size 23px
                                 letter-spacing 0.5px
+                                display none
+                                opacity 0
+                                transition opacity 0.35s ease
+                            :show
+                                {
+                                    block.css('display', 'block');
+                                    setTimeout(_ => {
+                                        block.css('opacity', '1');
+                                    }, 50);
+                                }
+                            :hide
+                                {
+                                    setTimeout(_ => {
+                                        block.css('opacity', '0');
+                                        setTimeout(_ => {
+                                            block.css('display', 'none');
+                                        }, 360);
+                                    }, 50);
+                                }
                     div spacer2-5
                         css
                             height 10px

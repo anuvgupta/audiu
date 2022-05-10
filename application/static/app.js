@@ -153,8 +153,8 @@ var app = {
                         callback(data.data);
                 }, (data, error, status) => {
                     console.error(`HTTP request error with "generate_recommendations": ${status}`);
-                    console.log(error);
-                    console.log(data);
+                    // console.log(error);
+                    // console.log(data);
                     if (data.hasOwnProperty('message')) {
                         console.log(data.message);
                         app.ui.display_modal.generic_confirm("Recommendations Model Error", `Server Error: ${data.message}`, (s) => { /* console.log(s); */ });
@@ -169,8 +169,8 @@ var app = {
                         callback(data.data);
                 }, (data, error, status) => {
                     console.error(`HTTP request error with "generate_recommendations": ${status}`);
-                    console.log(error);
-                    console.log(data);
+                    // console.log(error);
+                    // console.log(data);
                     if (data.hasOwnProperty('message')) {
                         console.log(data.message);
                         app.ui.display_modal.generic_confirm("Recommendations Model Error", `Server Error: ${data.message}`, (s) => { /* console.log(s); */ });
@@ -267,7 +267,7 @@ var app = {
             if (window.location.pathname == '/fresh') {
                 app.main.config.target_run_id = app.main.config.url_params.get('r')
             }
-            console.log("target run set to: " + app.main.config.target_run_id);
+            console.log("[main] target run = " + app.main.config.target_run_id);
             setTimeout((_) => {
                 app.ui.place_root_block();
                 app.ui.block.load(

@@ -4,7 +4,10 @@ import websockets
 ## SOCKETS CLASS ##
 # websocket backend static class
 class Sockets():
+    
     ## WEBSOCKET SERVER ##
+
+    ## static methods ##
     # socket server start
     @staticmethod
     def socket_run(production='False', host='localhost', port='3000', signal_queue=None):

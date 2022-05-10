@@ -200,7 +200,6 @@
         "top_50_global":"37i9dQZEVXbMDoHDwVN2tF",
         "top_50_united_kingdom": "37i9dQZEVXbLnolsZ8PSNw",
         "top_songs_usa": "37i9dQZEVXbLp5XoPON0wI"
-        
     },
     "genres": {
         "mixed": ["top_songs_usa", "todays_top_hits", "new_music_friday","new_music_now","top_50_usa","top_50_global","top_50_united_kingdom"],

@@ -25,15 +25,18 @@ DB_KEY = '5tay0ut!'
 # web & websocket backend wrapper class
 class Backend():
 
+    ## static methods ##
     # backend web daemon process
     @staticmethod
-    def web_run(dataset, host, port, db_host, db_port, db_name, model_run_src, prod, backend_signal_queue):
+    def web_run(dataset, host, port, db_host, db_port, db_name, model_run_src, mp_queue_size, prod, backend_signal_queue):
         port = int(port)
         db_port = int(db_port)
+        mp_queue_size = int(mp_queue_size)
         prod = bool(prod)
         bk = Backend('static', 'templates', host, port, port + 1,
-                    dataset, db_host, db_port, db_name, model_run_src, backend_signal_queue)
+                    dataset, db_host, db_port, db_name, model_run_src, mp_queue_size, backend_signal_queue)
         bk.run_forever(prod)
+    # TODO: static metjod for local req
 
     # instance fields
     flask_app = None
@@ -54,7 +57,7 @@ class Backend():
     db_local = None
     db_engine = None
     # constructor
-    def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json', db_host='localhost', db_port=27017, db_name='default', model_run_src='data/runs', backend_signal_queue=None):
+    def __init__(self, static_folder='static', template_folder='templates', host='localhost', web_port=3000, ws_port=3001, dataset_src='dataset.json', db_host='localhost', db_port=27017, db_name='default', model_run_src='data/runs', mp_queue_size=10, backend_signal_queue=None):
         self.host = host
         self.db_host = db_host
         self.ws_port = ws_port
@@ -105,13 +108,16 @@ class Backend():
         time_inference = mongoengine.DecimalField(min_value=0, precision=6)
     # add model run record to database
     def database_new_model_run(self, model_type, playlist_selections, genre_selections, status, ts_created, ts_complete, time_total, time_training, time_inference):
-        new_model_run = Backend.ModelRun(model_type=model_type, playlist_selections=playlist_selections, genre_selections=genre_selections, inference_output=[], status=status,
-                        ts_created=ts_created, ts_complete=ts_complete, time_total=time_total, time_training=time_training, time_inference=time_inference,)
-        new_model_run.save(force_insert=True)
-        return str(new_model_run.id)
+        try:
+            new_model_run = Backend.ModelRun(model_type=model_type, playlist_selections=playlist_selections, genre_selections=genre_selections, inference_output=[], status=status,
+                            ts_created=ts_created, ts_complete=ts_complete, time_total=time_total, time_training=time_training, time_inference=time_inference,)
+            new_model_run.save(force_insert=True)
+            return str(new_model_run.id)
+        except:
+            return None
     # get model run from database
     def database_get_model_run(self, run_id):
-        query = Backend.ModelRun.objects(model_run_id__exact=run_id)
+        query = Backend.ModelRun.objects(id__exact=run_id)
         if len(query) != 1:
             return None
         model_run = query.first()
@@ -120,7 +126,7 @@ class Backend():
         return model_run
     # get model run status from database
     def database_get_model_run_status(self, run_id):
-        query = Backend.ModelRun.objects(model_run_id__exact=run_id)
+        query = Backend.ModelRun.objects(id__exact=run_id)
         if len(query) != 1:
             return None
         model_run = query.first()
@@ -130,26 +136,26 @@ class Backend():
         return model_run_status
     # update model run status in database
     def database_update_model_run_status(self, run_id, run_status):
-        query = Backend.ModelRun.objects(model_run_id__exact=run_id)
+        query = Backend.ModelRun.objects(id__exact=run_id)
         if len(query) < 1:
             return False
         model_run = query.first()
         if not model_run:
             return False
-        if run_id != model_run.model_run_id:
+        if run_id != model_run.id:
             return False
         model_run.status = run_status
         model_run.save()
         return True
     # update model run
     def database_update_model_run_output(self, run_id, inference_output):
-        query = Backend.ModelRun.objects(model_run_id__exact=run_id)
+        query = Backend.ModelRun.objects(id__exact=run_id)
         if len(query) < 1:
             return False
         model_run = query.first()
         if not model_run:
             return False
-        if run_id != model_run.model_run_id:
+        if run_id != model_run.id:
             return False
         model_run.inference_output = inference_output
         model_run.save()
@@ -199,8 +205,8 @@ class Backend():
     def view_home(self):
         return flask.render_template("index.html",
             config=self.json_encode(self.db_local['config']),
-            genres=self.json_encode(list(self.db_local['genres'].keys())),
-            models=self.json_encode(self.db_local['models']))
+            models=self.json_encode(self.db_local['models']),
+            genres=self.json_encode(list(self.db_local['genres'].keys())) )
     # web model api route
     def view_model(self):
         res_msg_default = 'Recommendations generating...'
@@ -223,6 +229,11 @@ class Backend():
             # create model run record
             ts_created = time.time()
             run_id = self.database_new_model_run(selected_model, playlist_selections, genre_selections, "created", ts_created, 0,0,0,0)
+            if run_id == None or not run_id:
+                return (flask.jsonify({
+                    'success': False,
+                    'message': 'Server error (failed to create new model run record in database).'
+                }), 500)
             request_data = {
                 "run_id": run_id,
                 "selected_model": selected_model,
@@ -247,7 +258,7 @@ class Backend():
                     "ts_created": ts_created
                 }
             })
-        else:  # GET
+        elif method == "GET":  # GET
             ## check status of existing model run ##
             # parse & verify run id
             target_run_id = flask.request.args.get("run_id", "")
@@ -257,17 +268,40 @@ class Backend():
                     'message': 'Invalid request input data (invalid "run_id").'
                 }), 400)
             # check model run status in database
-            # TODO: run database_get_model_run_status here
+            run_status = self.database_get_model_run_status(target_run_id)
+            if run_status == None or not run_status:
+                return (flask.jsonify({
+                    'success': False,
+                    'message': 'Server error (failed to retrieve model run record from database).'
+                }), 500)
+            inference_output = self.database_get_model_run(target_run_id).inference_output
             # return run info
             return flask.jsonify({
                 'success': True,
                 'message': res_msg_default,
                 'data': {
                     'run_id': target_run_id,
+                    'run_status': run_status,
+                    'inference_output': inference_output
                 }
             })
-                
-    
+        elif method == "PUT":  # PUT
+            ## update model status and run output results (between processes) ##
+            # (accessed by main process when child model run process starts and ends)
+            # parse & verify run id
+            target_run_id = flask.request.args.get("run_id", "")
+            if target_run_id == None or not target_run_id or target_run_id == "" or len(target_run_id) != DB_ID_LEN:
+                return (flask.jsonify({
+                    'success': False,
+                    'message': 'Invalid request input data (invalid "run_id").'
+                }), 400)
+            # check model run status in database
+            # TODO: check model run status in database and return
+        else:  # invalid method
+            return (flask.jsonify({
+                'success': False,
+                'message': 'Invalid request type/method "{}".'.format(method)
+            }), 405)
     # web route setup
     def bind_routes(self):
         self.flask_app.add_url_rule(
@@ -275,7 +309,7 @@ class Backend():
         self.flask_app.add_url_rule(
             "/fresh", "fresh", view_func=self.view_home, methods=['GET'])
         self.flask_app.add_url_rule(
-            "/model", "model", view_func=self.view_model, methods=['POST', 'GET'])
+            "/model", "model", view_func=self.view_model, methods=['POST', 'GET', 'PUT'])
     # web server start
     def web_serve(self, production='False'):
         production = bool(production)
