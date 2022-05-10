@@ -110,7 +110,7 @@ class Backend():
         new_model_run.save(force_insert=True)
         return str(new_model_run.id)
     # get model run from database
-    def database_check_model_run(self, run_id):
+    def database_get_model_run(self, run_id):
         query = Backend.ModelRun.objects(model_run_id__exact=run_id)
         if len(query) != 1:
             return None
@@ -118,14 +118,42 @@ class Backend():
         if not model_run:
             return None
         return model_run
+    # get model run status from database
+    def database_get_model_run_status(self, run_id):
+        query = Backend.ModelRun.objects(model_run_id__exact=run_id)
+        if len(query) != 1:
+            return None
+        model_run = query.first()
+        if not model_run:
+            return None
+        model_run_status = model_run.status
+        return model_run_status
     # update model run status in database
     def database_update_model_run_status(self, run_id, run_status):
-        # TODO: implement this
-        pass
+        query = Backend.ModelRun.objects(model_run_id__exact=run_id)
+        if len(query) < 1:
+            return False
+        model_run = query.first()
+        if not model_run:
+            return False
+        if run_id != model_run.model_run_id:
+            return False
+        model_run.status = run_status
+        model_run.save()
+        return True
     # update model run
     def database_update_model_run_output(self, run_id, inference_output):
-        # TODO: implement this
-        pass
+        query = Backend.ModelRun.objects(model_run_id__exact=run_id)
+        if len(query) < 1:
+            return False
+        model_run = query.first()
+        if not model_run:
+            return False
+        if run_id != model_run.model_run_id:
+            return False
+        model_run.inference_output = inference_output
+        model_run.save()
+        return True
     # import dataset & connect to db
     def database_init(self, production='False'):
         production = bool(production)
@@ -155,10 +183,18 @@ class Backend():
         self.db_local['config'] = config
 
     ## WEB SERVER ##
-    # request decode
-    def request_decode(self, raw_data):
-        raw_data = raw_data.decode('ascii')
-        return json.loads(raw_data)
+    # encode json data to embed into client JavaScript
+    def json_encode(self, obj, charset='ascii'):
+        try:
+            return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)
+        except:
+            return None
+    # decode raw data from post request into json object
+    def request_decode(self, raw_data, charset='ascii'):
+        try:
+            return json.loads(raw_data.decode(charset))
+        except:
+            return None
     # web home page route
     def view_home(self):
         return flask.render_template("index.html",
@@ -176,7 +212,7 @@ class Backend():
             request_data = None
             try:
                 request_data = self.request_decode(flask.request.get_data())
-            except Exception as e:
+            except:
                 return (flask.jsonify({
                     'success': False,
                     'message': 'Invalid request input data (invalid format).'
@@ -221,7 +257,7 @@ class Backend():
                     'message': 'Invalid request input data (invalid "run_id").'
                 }), 400)
             # check model run status in database
-            # TODO: run database_check_model_run here
+            # TODO: run database_get_model_run_status here
             # return run info
             return flask.jsonify({
                 'success': True,
@@ -231,9 +267,7 @@ class Backend():
                 }
             })
                 
-    # convenience conversion
-    def json_encode(self, obj, charset='ascii'):
-        return (base64.b64encode(json.dumps(obj).encode(charset))).decode(charset)
+    
     # web route setup
     def bind_routes(self):
         self.flask_app.add_url_rule(

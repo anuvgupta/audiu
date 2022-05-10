@@ -80,7 +80,7 @@ def main():
                     del model_run_procs[k]
                     print(model_run_procs)
             
-    except Exception as e:
+    except:
         pass
     for run_id, model_run_signal_queue in model_run_signal_queues.items():
         if model_run_signal_queue != None:
