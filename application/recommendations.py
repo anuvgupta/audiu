@@ -219,7 +219,7 @@ class Recommendations():
 
         ## model convenience functions ##
 
-        # retrieve playlist tracks from playlist ID
+        # retrieve playlist tracks from playlist ID (via spotipy)
         def sp_playlist_from_id(self, target_playlist_id, output=True):
             target_playlist = self.spotipy_client.user_playlist(self.spotify_credentials['playlist_user'], target_playlist_id)
             return target_playlist
@@ -241,7 +241,7 @@ class Recommendations():
 
         # convert playlist ID to list of track IDs (via spotipy)
         def sp_playlist_to_tracks(self, target_playlist_id, output=True):
-            target_playlist = self.spotipy_client.user_playlist(self.spotify_credentials['playlist_user'], target_playlist_id)
+            target_playlist = self.sp_playlist_from_id(target_playlist_id)
             target_tracks = target_playlist["tracks"]
             target_songs = target_tracks["items"]
             while target_tracks['next']:
@@ -271,8 +271,11 @@ class Recommendations():
                 print(track_audio_features[0])
             return track_audio_features
 
+        ## static methods ##
+
         # analyze performace of model on all sections/folds of dataset
-        def cross_val_analysis(self, model, x_train, y_train, k=10, output=True):
+        @staticmethod
+        def cross_val_analysis(model, x_train, y_train, k=10, output=True):
             kfold = sklearn.model_selection.StratifiedKFold(n_splits=k, shuffle=True)
             results = sklearn.model_selection.cross_val_score(model, x_train, y_train, cv=kfold)
             if output:
