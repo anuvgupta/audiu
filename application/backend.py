@@ -40,7 +40,7 @@ class Backend():
 
     # update model run record status/inference output with local PUT request to backend
     @staticmethod
-    def update_model_run_record(run_id, status=None, target_host_port='localhost:80', update_inference_output=False, model_run_src=''):
+    def update_model_run_record(run_id, status=None, target_host_port='localhost:80', update_inference_output=False, model_run_src='', calling_th='backend'):
         # paths
         package_dir_path = os.path.dirname(os.path.abspath(__file__))
         model_run_dir_path = os.path.join(package_dir_path, model_run_src)
@@ -55,6 +55,9 @@ class Backend():
             inference_output = output_json.get('results', None)
             if inference_output != '' and inference_output != None:
                 request_data["inference_output"] = inference_output
+            inference_accuracy = output_json.get('accuracy', None)
+            if inference_accuracy != '' and inference_accuracy != None:
+                request_data["inference_accuracy"] = inference_accuracy
             ts_profile_json = output_json.get('ts_profile', None)
             if ts_profile_json:
                 ts_complete = time.time()
@@ -64,7 +67,7 @@ class Backend():
                     "ts_training_length": float(ts_profile_json.get('ts_training_length', 0)),
                     "ts_inference_length": float(ts_profile_json.get('ts_inference_length', 0))
                 }
-        print("[backend] updating model run record with local put request:")
+        print(f"[{calling_th}] updating model run record with local put request:")
         print(request_data)
         response = requests.put(f"http://{target_host_port}/model", json=request_data)
         response_status = response.status_code
@@ -149,6 +152,7 @@ class Backend():
         genre_selections = mongoengine.ListField(required=True, unique=False)
         inference_output = mongoengine.ListField(required=False, unique=False)
         status = mongoengine.StringField(required=True, unique=False)
+        accuracy = mongoengine.DecimalField(min_value=0, precision=6)
         ts_created = mongoengine.DecimalField(min_value=0, precision=6)
         ts_complete = mongoengine.DecimalField(min_value=0, precision=6)
         time_total = mongoengine.DecimalField(min_value=0, precision=6)
@@ -241,6 +245,20 @@ class Backend():
         model_run.time_total = time_profile["ts_total_length"]
         model_run.time_training = time_profile["ts_training_length"]
         model_run.time_inference = time_profile["ts_inference_length"]
+        model_run.save()
+        return True
+
+    # update model run accuracy
+    def database_update_model_run_accuracy(self, run_id, accuracy):
+        query = Backend.ModelRun.objects(id__exact=run_id)
+        if len(query) < 1:
+            return False
+        model_run = query.first()
+        if not model_run:
+            return False
+        if str(run_id) != str(model_run.id):
+            return False
+        model_run.accuracy = accuracy
         model_run.save()
         return True
 
@@ -371,6 +389,7 @@ class Backend():
                 return (flask.jsonify({'success': False, 'message': 'Invalid request input data (invalid "run_id").'}), 400)
             status_update = request_data.get('status', '')
             inference_output_update = request_data.get('inference_output', None)
+            inference_accuracy_update = request_data.get('inference_accuracy', None)
             ts_profile_update = request_data.get('ts_profile', None)
             if status_update != '':
                 update_success = self.database_update_model_run_status(target_run_id, status_update)
@@ -384,6 +403,10 @@ class Backend():
                 update_success = self.database_update_model_run_time_profile(target_run_id, ts_profile_update)
                 if not update_success:
                     return (flask.jsonify({'success': False, 'message': 'Server error (failed to update new model run record time profile in database).'}), 500)
+            if inference_accuracy_update != '' and inference_accuracy_update != None:
+                update_success = self.database_update_model_run_accuracy(target_run_id, inference_accuracy_update)
+                if not update_success:
+                    return (flask.jsonify({'success': False, 'message': 'Server error (failed to update new model run record inference accuracy in database).'}), 500)
             # return success
             return flask.jsonify({
                 'success': True,

@@ -77,14 +77,15 @@ def main():
                         print('[main] received msg from model run {}: {}'.format(run_id, msg))
                     if "main:run-start" in msg:
                         target_run_id = msg.split(":")[2]
-                        if not backend.Backend.update_model_run_record(target_run_id, "running", target_host_port=HOST_PORT):
+                        if not backend.Backend.update_model_run_record(target_run_id, "running", target_host_port=HOST_PORT, calling_th='main'):
                             print("[main] failed to update model run record through local put request")
                         print("[main] model run processes:")
                         print(model_run_procs)
                     elif "main:run-done" in msg:
                         target_run_id = msg.split(":")[2]
                         model_run_procs[target_run_id].join()
-                        if not backend.Backend.update_model_run_record(target_run_id, "complete", target_host_port=HOST_PORT, update_inference_output=True, model_run_src=MODEL_RUN_SRC):
+                        if not backend.Backend.update_model_run_record(
+                                target_run_id, "complete", target_host_port=HOST_PORT, update_inference_output=True, model_run_src=MODEL_RUN_SRC, calling_th='main'):
                             print("[main] failed to update model run record through local put request")
                         model_run_procs[target_run_id] = None
                         model_run_signal_queues[target_run_id] = None

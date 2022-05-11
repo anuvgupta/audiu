@@ -12,10 +12,10 @@
         }
     },
     "models": {
-        "nn_stacked": "Neural Forest",
-        "nn_baseline": "Neural Network",
         "gradient_boost": "Intuitive Forest",
         "random_forest": "Decision Forest",
+        "nn_baseline": "Neural Network",
+        "nn_stacked": "Neural Forest",
         "k_neighbors": "Neighbor Vote"
     },
     "playlists": {

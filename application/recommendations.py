@@ -3,6 +3,7 @@
 
 import os
 import json
+from re import T
 import time
 import numpy
 import keras
@@ -12,7 +13,15 @@ import spotipy
 import sklearn
 import pathlib
 import scikeras
+import keras.layers
+import sklearn.metrics
+import sklearn.ensemble
+import sklearn.pipeline
+import sklearn.neighbors
+import sklearn.linear_model
+import sklearn.preprocessing
 import sklearn.model_selection
+import scikeras.wrappers
 
 
 ## RECOMMENDATIONS CLASS ##
@@ -35,6 +44,8 @@ class Recommendations():
         RANDOM_STATE = 1
         KNN_NUMBER_NEIGHBORS = 25
         PLAYLIST_LIMIT = 10
+        NN_TRAINING_EPOCHS = 100
+        NN_BATCH_SIZE = 5
 
         # instance fields
         run_id = ''
@@ -47,6 +58,9 @@ class Recommendations():
         spotipy_client = None
         sklearn_classifier = None
         dataframes = None
+        ts_profile = None
+        accuracy = 0.0
+        results = []
 
         # constructor
         def __init__(self, model_type, target_data, reject_data, inference_data, spotify_credentials, run_id):
@@ -60,6 +74,9 @@ class Recommendations():
             self.sklearn_classifier = None
             self.spotipy_client = None
             self.dataframes = None
+            self.ts_profile = {"time_total": 0, "time_training": 0, "time_inference": 0}
+            self.accuracy = 0.0
+            self.results = []
 
         ## main model methods ##
 
@@ -74,9 +91,9 @@ class Recommendations():
             reject_data_limited = self.reject_data if len(self.reject_data) <= playlist_limit else random.sample(self.reject_data, playlist_limit)
             inference_data_limited = self.inference_data if len(self.inference_data) <= playlist_limit else random.sample(self.inference_data, playlist_limit)
             # collect training & inference data track IDs
-            training_target_ids = self.sp_playlists_to_tracks(target_data_limited)
-            training_reject_ids = self.sp_playlists_to_tracks(reject_data_limited)
-            inference_ids = self.sp_playlists_to_tracks(inference_data_limited)
+            training_target_ids, training_target_songs = self.sp_playlists_to_tracks(target_data_limited)
+            training_reject_ids, training_reject_songs = self.sp_playlists_to_tracks(reject_data_limited)
+            inference_ids, inference_songs = self.sp_playlists_to_tracks(inference_data_limited)
             # collect training & inference data audio features
             training_target_features = self.sp_tracks_to_audio_features(training_target_ids, True)
             training_reject_features = self.sp_tracks_to_audio_features(training_reject_ids, False)
@@ -97,16 +114,37 @@ class Recommendations():
             # prepare inference features
             x_total_inf = inference_data[feature_subset]
             # save organized data dictionary
-            self.dataframes = {"training": {"x_total": x_total, "y_total": y_total, "x_train": x_train, "y_train": y_train, "x_test": x_test, "y_test": y_test}, "inference": {"x_total": x_total_inf}}
+            self.dataframes = {
+                "training": {
+                    "x_total": x_total,
+                    "y_total": y_total,
+                    "x_train": x_train,
+                    "y_train": y_train,
+                    "x_test": x_test,
+                    "y_test": y_test
+                },
+                "inference": {
+                    "x_total": x_total_inf,
+                    "x_songs": inference_songs
+                }
+            }
 
         # build model architecture in memory
         def build(self, output=True):
             self.sklearn_classifier = None
             classifier_final = None
             if self.model_type == 'nn_stacked':
-                pass
+                rfc_clf = sklearn.ensemble.RandomForestClassifier(n_estimators=Recommendations.Model.RANDOM_FOREST_N_ESTIMATORS, random_state=Recommendations.Model.RANDOM_STATE)
+                knn_clf = sklearn.neighbors.KNeighborsClassifier(n_neighbors=Recommendations.Model.KNN_NUMBER_NEIGHBORS)
+                gbc_clf = sklearn.ensemble.GradientBoostingClassifier(n_estimators=Recommendations.Model.GRADIENT_BOOST_N_ESTIMATORS,
+                                                                      learning_rate=Recommendations.Model.GRADIENT_BOOST_LEARNING_RATE,
+                                                                      max_depth=Recommendations.Model.GRADIENT_BOOST_MAX_DEPTH,
+                                                                      random_state=Recommendations.Model.RANDOM_STATE)
+                nn_clf = Recommendations.Model.keras_nn_pipeline_model(training_epochs=Recommendations.Model.NN_TRAINING_EPOCHS, batch_size=Recommendations.Model.NN_BATCH_SIZE)
+                base_learners = [('rf_1', rfc_clf), ('rf_2', knn_clf), ('rf_3', gbc_clf), ('rf_4', nn_clf)]
+                classifier_final = sklearn.ensemble.StackingClassifier(estimators=base_learners, final_estimator=sklearn.linear_model.LogisticRegression())
             elif self.model_type == 'nn_baseline':
-                pass
+                classifier_final = Recommendations.Model.keras_nn_pipeline_model(training_epochs=Recommendations.Model.NN_TRAINING_EPOCHS, batch_size=Recommendations.Model.NN_BATCH_SIZE)
             elif self.model_type == 'gradient_boost':
                 classifier_final = sklearn.ensemble.GradientBoostingClassifier(n_estimators=Recommendations.Model.GRADIENT_BOOST_N_ESTIMATORS,
                                                                                learning_rate=Recommendations.Model.GRADIENT_BOOST_LEARNING_RATE,
@@ -115,33 +153,89 @@ class Recommendations():
             elif self.model_type == 'random_forest':
                 classifier_final = sklearn.ensemble.RandomForestClassifier(n_estimators=Recommendations.Model.RANDOM_FOREST_N_ESTIMATORS, random_state=Recommendations.Model.RANDOM_STATE)
             elif self.model_type == 'k_neighbors':
-                classifier_final = sklearn.ensemble.KNeighborsClassifier(n_neighbors=Recommendations.Model.KNN_NUMBER_NEIGHBORS)
+                classifier_final = sklearn.neighbors.KNeighborsClassifier(n_neighbors=Recommendations.Model.KNN_NUMBER_NEIGHBORS)
             else:
                 classifier_final = None
             self.sklearn_classifier = classifier_final
 
         # train model on targeted & rejected playlists
-        def train(self, output=True):
-            pass
+        def learn(self, output=True):
+            # collect classifier & data
+            clf = self.sklearn_classifier
+            x_train = self.dataframes["training"]["x_train"]
+            y_train = self.dataframes["training"]["y_train"]
+            x_test = self.dataframes["training"]["x_test"]
+            y_test = self.dataframes["training"]["y_test"]
+            # train & profile timing
+            ts_train_start = time.time()
+            clf.fit(x_train, y_train)
+            ts_train_end = time.time()
+            ts_train_length = ts_train_end - ts_train_start
+            self.ts_profile["time_training"] = ts_train_length
+            # calculate validation accuracy
+            val_pred = clf.predict(x_test)
+            accuracy_score = sklearn.metrics.accuracy_score(y_test, val_pred) * 100
+            self.accuracy = accuracy_score
 
         # test model on inference playlists
-        def infer(self, output=True):
-            pass
+        def predict(self, output=True):
+            # collect classifier & data
+            clf = self.sklearn_classifier
+            x_inference = self.dataframes["inference"]["x_total"]
+            x_inference_songs = self.dataframes["inference"]["x_songs"]
+            # infer & profile timing
+            ts_inference_start = time.time()
+            predictions = clf.predict(x_inference)
+            ts_inference_end = time.time()
+            ts_inference_length = ts_inference_end - ts_inference_start
+            self.ts_profile["time_inference"] = ts_inference_length
+            # collect result track info
+            results = []
+            yeses = 0
+            nos = 0
+            for p in range(len(predictions)):
+                if predictions[p] == 1:
+                    song_track = x_inference_songs[p]['track']
+                    artist_list = []
+                    for artist in song_track['artists']:
+                        artist_list.append(artist['name'])
+                    artist_list = (", ").join(artist_list)
+                    song_result = {
+                        "id": song_track['id'],
+                        "name": song_track['name'],
+                        "artist": artist_list,
+                        "album": song_track['album']['name'],
+                        "href": song_track['href'],
+                        "preview_url": song_track['preview_url']
+                    }
+                    results.append(song_result)
+                    yeses += 1
+                else:
+                    nos += 1
+            print(f"{yeses} YESES vs {nos} NOS")
+            self.results = results
 
         ## model convenience functions ##
+
+        # retrieve playlist tracks from playlist ID
+        def sp_playlist_from_id(self, target_playlist_id, output=True):
+            target_playlist = self.spotipy_client.user_playlist(self.spotify_credentials['playlist_user'], target_playlist_id)
+            return target_playlist
 
         # convert playlist ID list to large track ID list (via spotipy)
         def sp_playlists_to_tracks(self, target_playlist_ids, output=True):
             all_target_ids = []
+            all_target_songs = []
             for target_playlist_id in target_playlist_ids:
-                target_ids = self.sp_playlist_to_tracks(target_playlist_id, output)
+                target_ids, target_songs = self.sp_playlist_to_tracks(target_playlist_id, output)
                 if output:
                     print(len(target_ids))
                 all_target_ids += target_ids
+                all_target_songs += target_songs
             if output:
                 print(len(all_target_ids))
                 print(all_target_ids[0])
-            return all_target_ids
+            return (all_target_ids, all_target_songs)
 
         # convert playlist ID to list of track IDs (via spotipy)
         def sp_playlist_to_tracks(self, target_playlist_id, output=True):
@@ -152,11 +246,13 @@ class Recommendations():
                 target_tracks = self.spotipy_client.next(target_tracks)
                 for item in target_tracks["items"]:
                     target_songs.append(item)
+            target_songs_final = []
             target_ids = []
             for i in range(len(target_songs)):
                 if target_songs[i] and target_songs[i]['track'] and target_songs[i]['track']['id']:
                     target_ids.append(target_songs[i]['track']['id'])
-            return target_ids
+                    target_songs_final.append(target_songs[i])
+            return (target_ids, target_songs_final)
 
         # collect spotify audio features from track IDs (via spotipy)
         def sp_tracks_to_audio_features(self, track_ids, target=True, output=True):
@@ -180,6 +276,26 @@ class Recommendations():
             if output:
                 print("Cross-Validation Score Standardized: %.2f%% (%.2f%%)" % (results.mean() * 100, results.std() * 100))
             return (results.mean() * 100)
+
+        # generate keras pipeline from baseline
+        @staticmethod
+        def keras_nn_pipeline_model(training_epochs, batch_size):
+            estimators = []
+            estimators.append(('standardize', sklearn.preprocessing.StandardScaler()))
+            estimators.append(('mlp', scikeras.wrappers.KerasClassifier(build_fn=Recommendations.Model.keras_nn_baseline_model_shaped, epochs=training_epochs, batch_size=batch_size, verbose=0)))
+            keras_pipeline = sklearn.pipeline.Pipeline(estimators)
+            return keras_pipeline
+
+        # generate keras custom baseline neural network model
+        @staticmethod
+        def keras_nn_baseline_model_shaped():
+            model = keras.models.Sequential()
+            model.add(keras.layers.Dense(5, input_dim=9, activation='relu'))
+            model.add(keras.layers.Dense(60, input_dim=5, activation='relu'))
+            model.add(keras.layers.Dense(5, input_dim=60, activation='relu'))
+            model.add(keras.layers.Dense(1, activation='relu'))
+            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+            return model
 
     ## static methods ##
     # process fork for generating recommendations
@@ -212,11 +328,12 @@ class Recommendations():
         }
         print("[ml] generating recommendations for run {}".format(run_id))
         # print(input_data)
-        results, ts_profile = Recommendations.generate_recommendations(run_id, input_data, spotify_credentials)
+        results, accuracy, ts_profile = Recommendations.generate_recommendations(run_id, input_data, spotify_credentials)
         output_data = {
             "run_id": run_id,
             "model_type": input_data["model_type"],
             "results": results,
+            "accuracy": accuracy,
             "ts_profile": {
                 "ts_total_length": ts_profile[0],
                 "ts_training_length": ts_profile[1],
@@ -230,29 +347,30 @@ class Recommendations():
     # generate recommendations
     @staticmethod
     def generate_recommendations(run_id, input_data, spotify_credentials):
-        # TODO: actually generate recommendations using ml models
+        # parse input data
         model_type = input_data["model_type"]
         target_playlists = input_data["target_playlists"]
         reject_playlists = input_data["reject_playlists"]
         inference_playlists = input_data["inference_playlists"]
+        # create new model
         model = Recommendations.Model(model_type, target_playlists, reject_playlists, inference_playlists, spotify_credentials, run_id)
+        print("[ml] model audio feature data preparing")
         model.prepare()
-        # model.build()
-        # model.train()
-        # model.infer()
-        ########
-        results = []
-        # training
-        ts_training_start = time.time()
-        ts_training_end = time.time()
-        ts_training_length = ts_training_end - ts_training_start
-        # inference
-        ts_inference_start = time.time()
-        ts_inference_end = time.time()
-        ts_inference_length = ts_inference_end - ts_inference_start
-        ts_total_length = ts_training_length + ts_inference_length
+        print("[ml] model architecture building in memory")
+        model.build()
+        print("[ml] model training on input data")
+        model.learn()
+        print("[ml] model inference on source data")
+        model.predict()
+        # extract results & profiling info
+        results = model.results
+        accuracy = model.accuracy
+        ts_profile = model.ts_profile
+        time_total = ts_profile["time_total"]
+        time_training = ts_profile["time_training"]
+        time_inference = ts_profile["time_inference"]
         # return data
-        return (results, (ts_total_length, ts_training_length, ts_inference_length))
+        return (results, accuracy, (time_total, time_training, time_inference))
 
     # generate recommendations (mock method)
     @staticmethod
@@ -346,7 +464,7 @@ class Recommendations():
             "playlist_selections": request_json['playlist_selections'],
             "genre_selections": request_json['genre_selections']
         }
-        # # data preprocessing
+        # data preprocessing
         model_type = request_data["selected_model"]
         target_playlists = request_data['playlist_selections']
         reject_playlists = self.genres_to_playlists(self.genre_set_invert(request_data['genre_selections']), False)
