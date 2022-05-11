@@ -59,6 +59,7 @@ class Recommendations():
         sklearn_classifier = None
         dataframes = None
         ts_profile = None
+        results_ratio = None
         accuracy = 0.0
         results = []
 
@@ -74,6 +75,7 @@ class Recommendations():
             self.sklearn_classifier = None
             self.spotipy_client = None
             self.dataframes = None
+            self.results_ratio = (0, 0)
             self.ts_profile = {"time_total": 0, "time_training": 0, "time_inference": 0}
             self.accuracy = 0.0
             self.results = []
@@ -189,17 +191,18 @@ class Recommendations():
             ts_inference_end = time.time()
             ts_inference_length = ts_inference_end - ts_inference_start
             self.ts_profile["time_inference"] = ts_inference_length
+            self.ts_profile["time_total"] = self.ts_profile["time_training"] + self.ts_profile["time_inference"]
             # collect result track info
             results = []
-            yeses = 0
-            nos = 0
+            results_num_hits = 0
+            results_num_misses = 0
             for p in range(len(predictions)):
                 if predictions[p] == 1:
                     song_track = x_inference_songs[p]['track']
                     artist_list = []
                     for artist in song_track['artists']:
                         artist_list.append(artist['name'])
-                    artist_list = (", ").join(artist_list)
+                    # artist_list = (", ").join(artist_list)
                     song_result = {
                         "id": song_track['id'],
                         "name": song_track['name'],
@@ -209,10 +212,9 @@ class Recommendations():
                         "preview_url": song_track['preview_url']
                     }
                     results.append(song_result)
-                    yeses += 1
-                else:
-                    nos += 1
-            print(f"{yeses} YESES vs {nos} NOS")
+                    results_num_hits += 1
+            results_num_misses = len(predictions) - results_num_hits
+            self.results_ratio = (results_num_hits, results_num_misses)
             self.results = results
 
         ## model convenience functions ##
@@ -328,12 +330,16 @@ class Recommendations():
         }
         print("[ml] generating recommendations for run {}".format(run_id))
         # print(input_data)
-        results, accuracy, ts_profile = Recommendations.generate_recommendations(run_id, input_data, spotify_credentials)
+        results, accuracy, ts_profile, results_ratio = Recommendations.generate_recommendations(run_id, input_data, spotify_credentials)
         output_data = {
             "run_id": run_id,
             "model_type": input_data["model_type"],
             "results": results,
             "accuracy": accuracy,
+            "results_ratio": {
+                "hits": results_ratio[0],
+                "misses": results_ratio[1]
+            },
             "ts_profile": {
                 "ts_total_length": ts_profile[0],
                 "ts_training_length": ts_profile[1],
@@ -366,11 +372,12 @@ class Recommendations():
         results = model.results
         accuracy = model.accuracy
         ts_profile = model.ts_profile
+        results_ratio = model.results_ratio
         time_total = ts_profile["time_total"]
         time_training = ts_profile["time_training"]
         time_inference = ts_profile["time_inference"]
         # return data
-        return (results, accuracy, (time_total, time_training, time_inference))
+        return (results, accuracy, (time_total, time_training, time_inference), results_ratio)
 
     # generate recommendations (mock method)
     @staticmethod

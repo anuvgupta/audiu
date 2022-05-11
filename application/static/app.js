@@ -200,9 +200,15 @@ var app = {
                 var d = e.data;
                 if (d != null) {
                     console.log(`[ws] socket received: ${d}`);
-                    // var data = {};
-                    // data[d.event] = d.data;
-                    // app.ui.block.data(data);
+                    var d_split = d.split(':');
+                    var event_name = d_split[0];
+                    var event_data = d_split[1];
+                    switch (event_name) {
+                        case "notify":
+                            app.ui.block.data({ "run_complete": event_data });
+                        default:
+                            break;
+                    }
                 } else {
                     console.log('[ws] socket received:', 'invalid message', e.data);
                 }
@@ -222,7 +228,10 @@ var app = {
         },
         api: {
             send_message: (msg) => {
-                app.ws.send(msg);
+                app.ws.send(`msg:${msg}`);
+            },
+            subscribe_run_updates: (target_run_id) => {
+                app.ws.send(`sub:${target_run_id}`);
             }
         }
     },
@@ -274,7 +283,7 @@ var app = {
             if (window.location.pathname == '/fresh') {
                 app.main.config.target_run_id = app.main.config.url_params.get('r')
             }
-            console.log("[main] target run = " + app.main.config.target_run_id);
+            console.log("[main] target run = " + (app.main.config.target_run_id.trim().length > 0 ? `"${app.main.config.target_run_id}"` : `""`));
             setTimeout((_) => {
                 app.ui.place_root_block();
                 app.ui.block.load(

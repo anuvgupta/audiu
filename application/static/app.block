@@ -32,6 +32,16 @@ app
                     .data({  target_run_id: target_run_id  })
             ;
         }
+    
+    #run_complete
+        {
+            if (app.main.config.target_run_id != "" && run_complete.trim() == app.main.config.target_run_id.trim()) {
+                var new_loc = `/fresh?r=${app.main.config.target_run_id}`;
+                setTimeout(_ => {
+                    util.redirect(new_loc);
+                }, 500);
+            }
+        }
 
     div background
         css
@@ -444,8 +454,9 @@ app
                                     console.log("selected genres: ");
                                     console.log(values);
                                     block.parent().key('genre_selections', values);
-                                    if (values.length < 5) {
-                                        app.ui.display_modal.generic_confirm('Not Enough Vibes', 'Please choose at least 5 genres!', (s) => {
+                                    var min_genre_lim = app.main.config.dataset.config.min_genres;
+                                    if (values.length < min_genre_lim) {
+                                        app.ui.display_modal.generic_confirm('Not Enough Vibes', `Please choose at least ${min_genre_lim} genres!`, (s) => {
                                             //console.log(s);
                                         });
                                     } else {
@@ -612,6 +623,7 @@ app
                                     if (data.run_status == "created" || data.run_status == "running") {
                                         block.child('data_out_prep/results_loading').on('show');
                                         block.child('data_out_prep/subtext').on('show');
+                                        app.ws.api.subscribe_run_updates(target_run_id);
                                     } else if (data.run_status == "complete") {
                                         block.child('data_out_prep').css('display', 'none');
                                         block.child('data_out').css('display', 'table')
@@ -620,6 +632,7 @@ app
                                                 timing: data.ts_profile
                                             })
                                         ;
+                                        console.log(data);
                                     } else if (data.run_status == "error") {
                                         block.child('data_out_prep/results_loading/text').html('').data('sorry about that!');
                                         block.child('data_out_prep/subtext').html('').html('an AI error occurred...<br/><span style="font-size: 14px;">please head back and try again</span>');

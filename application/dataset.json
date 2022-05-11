@@ -1,5 +1,6 @@
 {
     "config": {
+        "min_genres": 3,
         "defaults": {
             "selected_model": "random_forest",
             "playlist_selections": ["5ghFHvZmV4FDK5YLeZQRu9"],
