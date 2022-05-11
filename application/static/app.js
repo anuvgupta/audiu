@@ -142,8 +142,10 @@ var app = {
         },
         api: {
             generate_recommendations: (selected_model, playlist_selections, genre_selections, callback = null) => {
+                for (var p in playlist_selections)
+                    playlist_selections[p] = app.main.sp_playlist_link_to_id(playlist_selections[p]);
                 for (var g in genre_selections)
-                    genre_selections[g] = app.main.reverse_genre_correction(genre_selections[g])
+                    genre_selections[g] = app.main.reverse_genre_correction(genre_selections[g]);
                 app.web.post("model", {
                     selected_model: selected_model,
                     playlist_selections: playlist_selections,
@@ -229,6 +231,11 @@ var app = {
             url_params: null,
             target_run_id: "",
             dataset: {}
+        },
+        sp_playlist_link_to_id: (playlist_link_raw) => {
+            return playlist_link_raw.split('?si=')[0]
+                .replaceAll('https://', '').replaceAll('http://', '')
+                .replaceAll('open.spotify.com/playlist/', '');
         },
         genre_correction: (genre) => {
             var genre_replacements = app.main.config.dataset.config.genre_replacements;

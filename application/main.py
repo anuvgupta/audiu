@@ -15,6 +15,7 @@ import recommendations
 HOST = '0.0.0.0'
 PORT = 8001
 HOST_PORT = f'{HOST}:{PORT}'
+CONFIG = 'config.json'
 DATASET = 'dataset.json'
 DB_NAME = 'audiu'
 DB_HOST = 'localhost'
@@ -23,6 +24,7 @@ MODEL_RUN_SRC = 'data/runs'
 MP_QUEUE_SIZE = 15
 DEL_FS_REC = True
 PROD = True
+
 
 ## MAIN ##
 # main entry point
@@ -39,8 +41,9 @@ def main():
     model_run_signal_queues = {}
     backend_signal_queue = multiprocessing.Queue(MP_QUEUE_SIZE)
     # backend process
-    backend_process = multiprocessing.Process(
-        target=backend.Backend.web_run, args=(str(DATASET), str(HOST), str(PORT), str(DB_HOST), str(DB_PORT), str(DB_NAME), str(MODEL_RUN_SRC), str(MP_QUEUE_SIZE), str(PROD), backend_signal_queue))
+    backend_process = multiprocessing.Process(target=backend.Backend.web_run,
+                                              args=(str(DATASET), str(HOST), str(PORT), str(DB_HOST), str(DB_PORT), str(DB_NAME), str(MODEL_RUN_SRC), str(MP_QUEUE_SIZE), str(PROD),
+                                                    backend_signal_queue))
     backend_process.start()
     # queue event loop
     try:
@@ -56,8 +59,8 @@ def main():
                 target_run_id = msg.split(":")[2]
                 recommendations_model.recommendations_prepare_input(target_run_id)
                 model_run_signal_queues[target_run_id] = multiprocessing.Queue(MP_QUEUE_SIZE)
-                model_run_procs[target_run_id] = multiprocessing.Process(target=recommendations.Recommendations.recommendations_run, args=(
-                    str(target_run_id), str(MODEL_RUN_SRC), model_run_signal_queues[target_run_id]))
+                model_run_procs[target_run_id] = multiprocessing.Process(target=recommendations.Recommendations.recommendations_run,
+                                                                         args=(str(target_run_id), str(MODEL_RUN_SRC), str(CONFIG), model_run_signal_queues[target_run_id]))
                 model_run_procs[target_run_id].start()
             elif msg == "main:backend-done":
                 break
@@ -88,7 +91,6 @@ def main():
                         print("[main] model run processes:")
                         print(model_run_procs)
                         if DEL_FS_REC:
-                            # TODO: delete the run folder (if deleting enabled as a global constant)
                             model_run_path = pathlib.Path(os.path.join(model_run_dir_path, target_run_id))
                             model_run_path.mkdir(parents=True, exist_ok=True)
                             try:
@@ -104,12 +106,12 @@ def main():
                     del model_run_procs[k]
                     print("[main] model run processes:")
                     print(model_run_procs)
-            
+
     except Exception as e:
         print("[main] error in main queue event loop")
         print(e)
         pass
-    
+
     for run_id, model_run_signal_queue in model_run_signal_queues.items():
         if model_run_signal_queue != None:
             model_run_signal_queue.put("run:quit")
@@ -118,6 +120,7 @@ def main():
             model_run_proc.join()
     backend_signal_queue.put("backend:quit")
     backend_process.join()
+
 
 # thread entry point
 if __name__ == "__main__":
