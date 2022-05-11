@@ -3,6 +3,7 @@ flask
 keras
 pandas
 spotipy
+requests
 websockets
 mongoengine
 scikit-learn

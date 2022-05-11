@@ -11,6 +11,13 @@
             "pop punk emo": "pop punk/emo"
         }
     },
+    "models": {
+        "nn_stacked": "Neural Forest",
+        "nn_baseline": "Neural Network",
+        "gradient_boost": "Intuitive Forest",
+        "random_forest": "Decision Forest",
+        "k_neighbors": "Neighbor Vote"
+    },
     "playlists": {
         "rapcaviar": "37i9dQZF1DX0XUsuxWHRQd",
         "hot_country": "37i9dQZF1DX1lVhptIYRda",
@@ -239,12 +246,5 @@
 
         "classical": ["peaceful_piano","calming_classical","classical_essentials","dark_academia_classical","epic_classical","not_quite_classical","classical_reading","iconic_soundtracks"]
 
-    },
-    "models": {
-        "nn_stacked": "Neural Forest",
-        "nn_baseline": "Neural Network",
-        "gradient_boost": "Intuitive Forest",
-        "random_forest": "Decision Forest",
-        "k_neighbors": "Neighbor Vote"
     }
 }

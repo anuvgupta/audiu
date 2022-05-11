@@ -11,19 +11,20 @@ import recommendations
 # constants
 HOST = '0.0.0.0'
 PORT = 8001
+HOST_PORT = f'{HOST}:{PORT}'
 DATASET = 'dataset.json'
 DB_NAME = 'audiu'
 DB_HOST = 'localhost'
 DB_PORT = 27017
 MODEL_RUN_SRC = 'data/runs'
 MP_QUEUE_SIZE = 15
+DEL_FS_REC = False
 PROD = True
 
 ## MAIN ##
 # main entry point
 def main():
-    recommendations_model = recommendations.Recommendations(
-        DATASET, MODEL_RUN_SRC)
+    recommendations_model = recommendations.Recommendations(DATASET, MODEL_RUN_SRC)
     recommendations_model.load_dataset()
     model_run_procs = {}
     model_run_signal_queues = {}
@@ -62,23 +63,23 @@ def main():
                         print('[main] received msg from model run {}: {}'.format(run_id, msg))
                     if "main:run-start" in msg:
                         target_run_id = msg.split(":")[2]
-                        # TODO: replace this line w http local req thru backend
-                        # backend_signal_queue.put("backend:run-start:{}".format(target_run_id))
+                        if not backend.Backend.update_model_run_record(target_run_id, "running", target_host_port=HOST_PORT):
+                            print("[main] failed to update model run record through local put request")
                         print("[main] model run processes:")
                         print(model_run_procs)
-                        print("")
                     elif "main:run-done" in msg:
                         target_run_id = msg.split(":")[2]
                         model_run_procs[target_run_id].join()
-                        # TODO: replace this line w http local req thru backend
-                        # backend_signal_queue.put("backend:run-done:{}".format(target_run_id))
+                        if not backend.Backend.update_model_run_record(target_run_id, "complete", target_host_port=HOST_PORT, update_inference_output=True, model_run_src=MODEL_RUN_SRC):
+                            print("[main] failed to update model run record through local put request")
                         model_run_procs[target_run_id] = None
                         model_run_signal_queues[target_run_id] = None
                         print("[main] model run processes:")
                         print(model_run_procs)
-                        print("")
-                        # TODO: tell backend process to update model run status to complete
-                        # TODO: backend should also save model run output to the db record, then delete the run folder (if deleting enabled as a global constant)
+                        if DEL_FS_REC:
+                            # TODO: delete the run folder (if deleting enabled as a global constant)
+                            pass
+
             for k in list(model_run_signal_queues.keys()):
                 if model_run_signal_queues[k] == None:
                     del model_run_signal_queues[k]
@@ -86,7 +87,6 @@ def main():
                     del model_run_procs[k]
                     print("[main] model run processes:")
                     print(model_run_procs)
-                    print("")
             
     except:
         pass
