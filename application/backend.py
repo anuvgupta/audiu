@@ -333,14 +333,21 @@ class Backend():
                     'success': False,
                     'message': 'Server error (failed to retrieve model run record from database).'
                 }), 500)
-            inference_output = self.database_get_model_run(target_run_id).inference_output
+            model_run_obj = self.database_get_model_run(target_run_id)
+            inference_output = model_run_obj.inference_output
+            ts_profile = {
+                "time_total": model_run_obj.time_total,
+                "time_training": model_run_obj.time_training,
+                "time_inference": model_run_obj.time_inference
+            }
             # return run info
             return flask.jsonify({
                 'success': True,
-                'message': res_msg_default,
+                'message': res_msg_alternate if run_status == "complete" else res_msg_default,
                 'data': {
                     'run_id': target_run_id,
                     'run_status': run_status,
+                    'ts_profile': ts_profile,
                     'inference_output': inference_output
                 }
             })

@@ -1,7 +1,10 @@
 # AUDIU
 # main.py
 
+import os
 import queue
+import shutil
+import pathlib
 import multiprocessing
 
 # local imports
@@ -18,25 +21,33 @@ DB_HOST = 'localhost'
 DB_PORT = 27017
 MODEL_RUN_SRC = 'data/runs'
 MP_QUEUE_SIZE = 15
-DEL_FS_REC = False
+DEL_FS_REC = True
 PROD = True
 
 ## MAIN ##
 # main entry point
 def main():
+    # paths
+    package_dir_path = os.path.dirname(os.path.abspath(__file__))
+    model_run_dir_path = os.path.join(package_dir_path, MODEL_RUN_SRC)
+    dataset_src = os.path.join(package_dir_path, DATASET)
+    # ml model
     recommendations_model = recommendations.Recommendations(DATASET, MODEL_RUN_SRC)
     recommendations_model.load_dataset()
+    # process management
     model_run_procs = {}
     model_run_signal_queues = {}
     backend_signal_queue = multiprocessing.Queue(MP_QUEUE_SIZE)
+    # backend process
     backend_process = multiprocessing.Process(
         target=backend.Backend.web_run, args=(str(DATASET), str(HOST), str(PORT), str(DB_HOST), str(DB_PORT), str(DB_NAME), str(MODEL_RUN_SRC), str(MP_QUEUE_SIZE), str(PROD), backend_signal_queue))
     backend_process.start()
+    # queue event loop
     try:
         while True:
             msg = ''
             try:
-                msg = backend_signal_queue.get(False)
+                msg = backend_signal_queue.get(block=False)
             except queue.Empty:
                 msg = ''
             if msg != '':
@@ -56,7 +67,7 @@ def main():
                 if model_run_signal_queue != None:
                     msg = ''
                     try:
-                        msg = model_run_signal_queue.get(False)
+                        msg = model_run_signal_queue.get(block=False)
                     except queue.Empty:
                         msg = ''
                     if msg != '':
@@ -78,7 +89,13 @@ def main():
                         print(model_run_procs)
                         if DEL_FS_REC:
                             # TODO: delete the run folder (if deleting enabled as a global constant)
-                            pass
+                            model_run_path = pathlib.Path(os.path.join(model_run_dir_path, target_run_id))
+                            model_run_path.mkdir(parents=True, exist_ok=True)
+                            try:
+                                shutil.rmtree(model_run_path)
+                            except Exception as e:
+                                print("[main] error removing model run data from local filesystem")
+                                print(e)
 
             for k in list(model_run_signal_queues.keys()):
                 if model_run_signal_queues[k] == None:
@@ -88,8 +105,11 @@ def main():
                     print("[main] model run processes:")
                     print(model_run_procs)
             
-    except:
+    except Exception as e:
+        print("[main] error in main queue event loop")
+        print(e)
         pass
+    
     for run_id, model_run_signal_queue in model_run_signal_queues.items():
         if model_run_signal_queue != None:
             model_run_signal_queue.put("run:quit")

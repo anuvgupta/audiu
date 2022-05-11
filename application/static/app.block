@@ -610,20 +610,26 @@ app
                             app.web.api.check_recommendations_status(target_run_id, (data) => {
                                 if (data.run_id == target_run_id) {
                                     if (data.run_status == "created" || data.run_status == "running") {
-                                        block.child('data_out/results_loading').on('show');
-                                        block.child('data_out/subtext').on('show');
+                                        block.child('data_out_prep/results_loading').on('show');
+                                        block.child('data_out_prep/subtext').on('show');
                                     } else if (data.run_status == "complete") {
-                                        block.child('data_out/image').css('display', 'none');
+                                        block.child('data_out_prep').css('display', 'none');
+                                        block.child('data_out').css('display', 'table')
+                                            .data({
+                                                tracklist: data.inference_output,
+                                                timing: data.ts_profile
+                                            })
+                                        ;
                                     } else if (data.run_status == "error") {
-                                        block.child('data_out/results_loading/text').html('').data('sorry about that!');
-                                        block.child('data_out/subtext').html('').html('an AI error occurred...<br/><span style="font-size: 14px;">please head back and try again</span>');
-                                        block.child('data_out/results_loading').on('show');
-                                        block.child('data_out/subtext').on('show');
+                                        block.child('data_out_prep/results_loading/text').html('').data('sorry about that!');
+                                        block.child('data_out_prep/subtext').html('').html('an AI error occurred...<br/><span style="font-size: 14px;">please head back and try again</span>');
+                                        block.child('data_out_prep/results_loading').on('show');
+                                        block.child('data_out_prep/subtext').on('show');
                                     }
                                 }
                             });
                         }
-                    block data_out
+                    block data_out_prep
                         css
                             width 80%
                             max-width 800px
@@ -716,6 +722,29 @@ app
                                         }, 360);
                                     }, 50);
                                 }
+                    block data_out
+                        css
+                            width 80%
+                            max-width 800px
+                            height 550px
+                            background-color #1a1a1a
+                            border-radius 6px
+                            border 1px solid #1e1e1e
+                            margin 0 auto
+                            display none
+                        #tracklist
+                            {
+                                console.log('tracklist', tracklist);
+                            }
+                        #timing
+                            {
+                                console.log('timing', timing);
+                            }
+                        text text
+                            val results
+                            css
+                                color white
+                                font-size 20px
                     div spacer2-5
                         css
                             height 10px
