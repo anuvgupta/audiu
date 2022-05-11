@@ -629,10 +629,14 @@ app
                                         block.child('data_out').css('display', 'table')
                                             .data({
                                                 tracklist: data.inference_output,
-                                                timing: data.ts_profile
+                                                results_ratio: data.inference_ratio,
+                                                run_length: data.run_length,
+                                                timing: data.ts_profile,
+                                                accuracy: data.validation_accuracy,
+                                                model_type: data.model_type
                                             })
                                         ;
-                                        console.log(data);
+                                        // console.log(data);
                                     } else if (data.run_status == "error") {
                                         block.child('data_out_prep/results_loading/text').html('').data('sorry about that!');
                                         block.child('data_out_prep/subtext').html('').html('an AI error occurred...<br/><span style="font-size: 14px;">please head back and try again</span>');
@@ -645,8 +649,8 @@ app
                     block data_out_prep
                         css
                             width 80%
-                            max-width 800px
-                            height 550px
+                            max-width 500px
+                            height 600px
                             background-color #1a1a1a
                             border-radius 6px
                             border 1px solid #1e1e1e
@@ -738,26 +742,162 @@ app
                     block data_out
                         css
                             width 80%
-                            max-width 800px
-                            height 550px
+                            max-width 500px
+                            height 600px
                             background-color #1a1a1a
                             border-radius 6px
-                            border 1px solid #1e1e1e
+                            border 1px solid #1f1f1f
                             margin 0 auto
                             display none
+                            position relative
+                        #model_type
+                            {
+                                model_name = 'Smart Model';
+                                if (app.main.config.dataset.models)
+                                    model_name = app.main.config.dataset.models[model_type];
+                                console.log('model_type', model_type, model_name);
+                                block.child('title').data({
+                                    update: model_name
+                                });
+                            }
                         #tracklist
                             {
                                 console.log('tracklist', tracklist);
                             }
                         #timing
                             {
+                                timing['time_total'] = parseFloat(timing['time_total'])
+                                timing['time_training'] = parseFloat(timing['time_training'])
+                                timing['time_inference'] = parseFloat(timing['time_inference'])
                                 console.log('timing', timing);
+                                block.child('details').data(timing);
                             }
-                        text text
-                            val results
+                        #run_length
+                            {
+                                run_length = parseFloat(run_length);
+                                console.log('run_length', run_length);
+                                block.child('details').data({
+                                    run_length: run_length
+                                });
+                            }
+                        #results_ratio
+                            {
+                                results_ratio[0] = parseFloat(results_ratio[0])
+                                results_ratio[1] = parseFloat(results_ratio[1])
+                                results_ratio_final = results_ratio[0] / (results_ratio[0] + results_ratio[1])
+                                console.log('results_ratio', results_ratio, results_ratio_final);
+                                block.child('details').data({
+                                    ratio: results_ratio_final
+                                });
+                            }
+                        #accuracy
+                            {
+                                accuracy = parseFloat(accuracy);
+                                console.log('accuracy', accuracy);
+                                block.child('details').data({
+                                    accuracy: accuracy
+                                });
+                            }
+                        block title
                             css
-                                color white
-                                font-size 20px
+                                position absolute
+                                top 0
+                                left 0
+                                width 100%
+                                height 75px
+                                border-bottom 1px solid #1f1f1f
+                                box-sizing border-box
+                            #update
+                                {
+                                    block.child('text').html('').data(update);
+                                }
+                            text text
+                                val Model Run
+                                css
+                                    color #eee
+                                    font-size 25px
+                                    letter-spacing 0.8px
+                        div content
+                            css
+                                position absolute
+                                top 80px
+                                left 0
+                                width 100%
+                                box-sizing border-box
+                                overflow-y auto
+                                overflow-x none
+                            @query window height != 0
+                                {
+                                    block.css('height', (block.parent().$().height() - block.sibling('title').$().height() - block.sibling('details').$().height() - 2) + 'px');
+                                }
+                            sp-track-view example_track
+                                id sampleID_abcdefg
+                                name Track Name
+                                artist Track Artist
+                                album Track Album
+                                link http://spotify.com
+                                preview https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNYn6ru1tFjLlJmddZ_xIjEPrK8isac41Opg&usqp=CAU
+                        block details
+                            css
+                                position absolute
+                                bottom 0
+                                left 0
+                                width 100%
+                                height 80px
+                                border-top 1px solid #1f1f1f
+                                box-sizing border-box
+                            {
+                                block.key('accuracy', 70.0);
+                                block.key('ratio', 15.0);
+                                block.key('run_length', 0.0);
+                                block.key('time_training', 0.0);
+                                block.key('time_inference', 0.0);
+                            }
+                            #accuracy
+                                {
+                                    block.key('accuracy', accuracy);
+                                    block.on('update_text');
+                                }
+                            #ratio
+                                {
+                                    block.key('ratio', ratio);
+                                    block.on('update_text');
+                                }
+                            #run_length
+                                {
+                                    block.key('run_length', run_length);
+                                    block.on('update_text');
+                                }
+                            #time_training
+                                {
+                                    block.key('time_training', time_training);
+                                    block.on('update_text');
+                                }
+                            #time_inference
+                                {
+                                    block.key('time_inference', time_inference);
+                                    block.on('update_text');
+                                }
+                            #time_total
+                                {
+                                    block.key('time_total', time_total);
+                                    block.on('update_text');
+                                }
+                            :update_text
+                                {
+                                    accuracy = block.key('accuracy').toFixed(2);
+                                    ratio = block.key('ratio').toFixed(2);
+                                    run_length = block.key('run_length').toFixed(2);
+                                    time_training = block.key('time_training').toFixed(3);
+                                    time_inference = block.key('time_inference').toFixed(3);
+                                    block.child('text').html('').html(`Accuracy ${accuracy}%&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio ${ratio}%<br/>${run_length}s total&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${time_training}s learn + ${time_inference}s gen`);
+                                }
+                            text text
+                                html Accuracy __%&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio __%<br/>__s total&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;__s learn + __s gen
+                                css
+                                    color #eee
+                                    font-size 14px
+                                    letter-spacing 0.5px
                     div spacer2-5
                         css
                             height 10px

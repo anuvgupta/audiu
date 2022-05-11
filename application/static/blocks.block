@@ -188,4 +188,38 @@
         }
 
 // app-specific blocks
-//      
+!sp-track-view
+    init
+        {
+            var block = Block('div');
+            block
+                .css({
+                    width: '100%',
+                    height: '130px',
+                    boxSizing: 'border-box',
+                    borderBottom: '1px solid #1e1e1e'
+                })
+            ;
+            return block;
+        }
+    block
+        {
+            data('id', id => {
+                block.key('id', id);
+            });
+            data('name', name => {
+                block.key('name', name);
+            });
+            data('artist', artist => {
+                block.key('artist', artist);
+            });
+            data('album', album => {
+                block.key('album', album);
+            });
+            data('link', link => {
+                block.key('link', link);
+            });
+            data('preview', preview => {
+                block.key('preview', preview);
+            });
+        }

@@ -369,6 +369,7 @@ class Backend():
             if run_status == None or not run_status:
                 return (flask.jsonify({'success': False, 'message': 'Server error (failed to retrieve model run record from database).'}), 500)
             model_run_obj = self.database_get_model_run(target_run_id)
+            model_type = model_run_obj.model_type
             inference_output = model_run_obj.inference_output
             inference_ratio = model_run_obj.inference_ratio
             inference_output = model_run_obj.inference_output
@@ -383,10 +384,11 @@ class Backend():
                     'run_id': target_run_id,
                     'run_status': run_status,
                     'run_length': run_length,
+                    "model_type": model_type,
                     'ts_profile': ts_profile,
                     'inference_output': inference_output,
                     'inference_ratio': inference_ratio,
-                    'validation_accuracy': validation_accuracy
+                    'validation_accuracy': validation_accuracy,
                 }
             })
         elif method == "PUT":  # PUT
