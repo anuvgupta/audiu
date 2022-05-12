@@ -78,22 +78,23 @@ app
                 text-align center
             div spacer1
                 css
-                    height 120px
+                    height 130px
             div title
                 text text
-                    val AudiU
+                    val audiU
                     class stretch
                     css
                         padding-top 15px
                         display inline-block
                         color white
-                        font-size 90px
-                        letter-spacing 3px
-                        font-family Blackpast, Barlow
+                        font-size 70px
+                        //font-size 90px
+                        letter-spacing 4px
+                        font-family PressStart2P, Barlow
                         font-weight 500
             div spacer2
                 css
-                    height 10px
+                    height 5px
             block model_form
                 @query window height != 0
                     {
@@ -655,7 +656,7 @@ app
                         css
                             width 80%
                             max-width 600px
-                            height 600px
+                            height 300px
                             background-color rgba(200,200,200,0)
                             border-radius 6px
                             border 1px solid rgba(200,200,200,0)

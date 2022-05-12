@@ -288,7 +288,7 @@ class Recommendations():
         def keras_nn_pipeline_model(training_epochs, batch_size):
             estimators = []
             estimators.append(('standardize', sklearn.preprocessing.StandardScaler()))
-            estimators.append(('mlp', scikeras.wrappers.KerasClassifier(build_fn=Recommendations.Model.keras_nn_baseline_model_shaped, epochs=training_epochs, batch_size=batch_size, verbose=0)))
+            estimators.append(('mlp', scikeras.wrappers.KerasClassifier(build_fn=Recommendations.Model.keras_nn_baseline_model_shaped, epochs=training_epochs, batch_size=batch_size, verbose=1)))
             keras_pipeline = sklearn.pipeline.Pipeline(estimators)
             return keras_pipeline
 
