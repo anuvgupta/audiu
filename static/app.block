@@ -247,7 +247,6 @@ app
                         div spacer
                             height 5px
                     button submit_btn
-                        class mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored
                         html GO
                         css
                             outline none
@@ -258,6 +257,13 @@ app
                             width 100px
                             border-radius 3px
                             opacity 0.9
+                            color white
+                            outline none
+                        {
+                            if (!util.mobileAndTablet()) {
+                                block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
+                            }
+                        }
                         :click
                             {
                                 var values = [];
@@ -435,7 +441,6 @@ app
                         div spacer
                             height 5px
                     button submit_btn
-                        class mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored
                         html GO
                         css
                             outline none
@@ -446,6 +451,13 @@ app
                             width 100px
                             border-radius 3px
                             opacity 0.9
+                            color white
+                            outline none
+                        {
+                            if (!util.mobileAndTablet()) {
+                                block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
+                            }
+                        }
                         :click
                             {
                                 var genres_list = app.main.get_genre_list();
@@ -558,7 +570,6 @@ app
                             }
                         }
                     button submit_btn
-                        class mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored
                         html GO
                         css
                             outline none
@@ -569,6 +580,13 @@ app
                             width 100px
                             border-radius 3px
                             opacity 0.9
+                            color white
+                            outline none
+                        {
+                            if (!util.mobileAndTablet()) {
+                                block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
+                            }
+                        }
                         :click
                             {
                                 var selected_model = block.sibling('model_selector').node().value;
