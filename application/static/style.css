@@ -50,6 +50,7 @@ input.playlist-input {
     border: 1.5px solid #444;
     color: white;
     outline: none;
+    opacity: 0.9;
 }
 
 input.genre-input {
@@ -64,6 +65,7 @@ input.genre-input {
     border: 1.5px solid #444;
     color: white;
     outline: none;
+    opacity: 0.9;
 }
 
 div.bootbox.modal {
