@@ -28,6 +28,9 @@ PROD = True
 HEROKU = os.environ.get('ON_HEROKU')
 if HEROKU:
     PORT = int(os.environ.get('PORT', 17995))
+HOST_PORT = f'{HOST}:{PORT}'
+
+print(HOST, PORT, HOST_PORT)
 
 
 ## MAIN ##
