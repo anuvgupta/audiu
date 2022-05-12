@@ -72,7 +72,12 @@ class Backend():
                 }
         print(f"[{calling_th}] updating model run record with local put request:")
         print(request_data)
-        response = requests.put(f"http://{target_host_port}/model", json=request_data)
+        response = None
+        while response == None:
+            try:
+                response = requests.put(f"http://{target_host_port}/model", json=request_data)
+            except:
+                response = None
         response_status = response.status_code
         response_json = response.json()
         print(response_json)

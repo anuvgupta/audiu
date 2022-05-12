@@ -203,7 +203,7 @@
                     borderBottom: '1px solid #1e1e1e',
                     position: 'relative'
                 })
-                .add(Block('div', 'preview')
+                .add(Block('div', 'cover_art')
                     .css({
                         height: h + 'px',
                         width: h + 'px',
@@ -211,12 +211,80 @@
                         top: '0',
                         bottom: '0',
                     })
-                    .add(Block('image', 'preview_img')
+                    .add(Block('image', 'cover_art_img')
                         .data({
                             height: h + 'px',
                             width: h + 'px',
-                            src: '/img/default_cover.png'
+                            src: '/img/default_cover.png',
+                            css: {
+                                position: 'absolute',
+                                top: '0',
+                                left: '0',
+                                zIndex: '1'
+                            }
                         })
+                    )
+                    .add(Block('block', 'player')
+                        .css({
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            zIndex: '2'
+                        })
+                        .add(Block('audio', 'audio_player')
+                            .css({
+                                position: 'absolute',
+                                top: '0',
+                                left: '0'
+                            })
+                        )
+                        .key('playing', 'false')
+                        .add(Block('button', 'play_button')
+                            .css({
+                                height: '50px',
+                                width: '50px',
+                                backgroundColor: 'rgba(240,240,240,0)',
+                                border: '1px solid rgba(240,240,240,0)',
+                                cursor: 'pointer',
+                                opacity: '0.3',
+                                transition: 'opacity 0.2s ease',
+                                outline: 'none'
+                            })
+                            .add(Block('block', 'content')
+                                .add(Block('image', 1)
+                                    .data({
+                                        height: '40px',
+                                        width: '40px',
+                                        src: '/img/play_w.png',
+                                        css: { position: 'relative', left: '-3px' }
+                                    })
+                                )
+                            )
+                            .on('mouseover', (e, b, d) => {
+                                b.css('opacity', '1');
+                            })
+                            .on('mouseout', (e, b, d) => {
+                                b.css('opacity', '0.4');
+                            })
+                            .on('click', (e, b, d) => {
+                                if (!d.hasOwnProperty('automated') || d.automated == false) {
+                                    block.parent().on('pause_all_tracks', { except: block.mark() });
+                                }
+                                //setTimeout(_ => {
+                                    var playing = b.parent().key('playing');
+                                    if (playing == 'true') {
+                                        b.sibling('audio_player').node().pause();
+                                        b.child('content/image').data({ src: '/img/play_w.png' });
+                                        playing = 'false';
+                                    } else {
+                                        b.sibling('audio_player').node().play();
+                                        b.child('content/image').data({ src: '/img/stop_w.png' });
+                                        playing = 'true';
+                                    }
+                                    b.parent().key('playing', playing);
+                                //}, 20);
+                            })
+                        )
                     )
                 )
                 .add(Block('div', 'name')
@@ -236,7 +304,7 @@
                         .css({
                             alignSelf: 'flex-end',
                             color: 'white',
-                            fontSize: '28px',
+                            fontSize: '22px',
                             letterSpacing: '1.2px'
                         })
                     )
@@ -256,7 +324,7 @@
                         .data('Track Artist(s)')
                         .css({
                             color: 'white',
-                            fontSize: '18px',
+                            fontSize: '16px',
                             letterSpacing: '1px'
                         })
                     )
@@ -267,7 +335,7 @@
                         .data('Track Album Name')
                         .css({
                             color: 'white',
-                            fontSize: '14px',
+                            fontSize: '12px',
                             letterSpacing: '0.8px',
                             fontWeight: '200',
                             fontStyle: 'italic'
@@ -306,13 +374,13 @@
                                     })
                                 )
                             )
-                            .on('mouseover', (e, b, d) => {
-                                b.css('opacity', '0.7');
-                            })
-                            .on('mouseout', (e, b, d) => {
-                                b.css('opacity', '1');
-                            })
                         )
+                        .on('mouseover', (e, b, d) => {
+                            b.css('opacity', '0.8');
+                        })
+                        .on('mouseout', (e, b, d) => {
+                            b.css('opacity', '1');
+                        })
                     )
                 )
             ;
@@ -337,12 +405,33 @@
             });
             data('link', link => {
                 block.key('link', link);
-                block.child('launch/img_btn/link').attribute('href', link);
+                if (link == '' || link == null) {
+                    block.child('launch/img_btn').css('display', 'none');
+                } else {
+                    //block.child('launch/img_btn').css('display', 'block');
+                    block.child('launch/img_btn/link').attribute('href', link);
+                }
+            });
+            data('cover_art', cover_art => {
+                block.key('cover_art', cover_art);
+                if (cover_art != '' && cover_art != null) {
+                    block.child('cover_art/cover_art_img').data({
+                        'src': cover_art
+                    });
+                }
             });
             data('preview', preview => {
                 block.key('preview', preview);
-                block.child('preview/preview_img').data({
-                    'src': preview
-                });
+                if (preview != '' && preview != null) {
+                    block.child('cover_art/player/audio_player')
+                        .add(Block('source', 'audio_source')
+                            .attribute('type', 'audio/mpeg')
+                            .attribute('src', `${preview}`)
+                        )
+                        //.attribute('controls', 'controls')
+                    ;
+                } else {
+                    block.child('cover_art/player').css('display', 'none');
+                }
             });
         }

@@ -208,8 +208,9 @@ class Recommendations():
                         "name": song_track['name'],
                         "artist": artist_list,
                         "album": song_track['album']['name'],
-                        "href": song_track['href'],
-                        "preview_url": song_track['preview_url']
+                        "href": song_track['external_urls']['spotify'] if song_track['external_urls'] and song_track['external_urls']['spotify'] else '',
+                        "preview_url": song_track['preview_url'] if song_track['preview_url'] else '',
+                        "cover_art_url": song_track['album']['images'][0]['url'] if len(song_track['album']['images']) > 0 else ''
                     }
                     results.append(song_result)
                     results_num_hits += 1

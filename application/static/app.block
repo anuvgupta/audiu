@@ -649,7 +649,7 @@ app
                     block data_out_prep
                         css
                             width 80%
-                            max-width 500px
+                            max-width 600px
                             height 600px
                             background-color #1a1a1a
                             border-radius 6px
@@ -742,7 +742,7 @@ app
                     block data_out
                         css
                             width 80%
-                            max-width 500px
+                            max-width 600px
                             height 600px
                             background-color #1a1a1a
                             border-radius 6px
@@ -763,6 +763,9 @@ app
                         #tracklist
                             {
                                 console.log('tracklist', tracklist);
+                                block.child('content').data({
+                                    tracklist: tracklist
+                                });
                             }
                         #timing
                             {
@@ -826,9 +829,45 @@ app
                                 box-sizing border-box
                                 overflow-y auto
                                 overflow-x none
+                                -webkit-overflow-scrolling touch
                             @query window height != 0
                                 {
                                     block.css('height', (block.parent().$().height() - block.sibling('title').$().height() - block.sibling('details').$().height() - 2) + 'px');
+                                }
+                            #tracklist
+                                {
+                                    block.html('');
+                                    for (var t in tracklist) {
+                                        var track = tracklist[t];
+                                        var track_view = Block('sp-track-view', 'track_' + track.id);
+                                        track_view.key('track_obj', track);
+                                        var tr_name = track.name.split("(feat.")[0].trim().split("(W/")[0].trim();
+                                        var tr_preview = track.preview_url && track.preview_url.trim().length > 0 ? track.preview_url : '';
+                                        var tr_artist = track.artist.length > 1 ? (track.artist.join(', ')) : (track.artist[0]);
+                                        track_view.data({
+                                            id: track.id,
+                                            name: tr_name,
+                                            album: track.album,
+                                            link: track.href,
+                                            cover_art: track.cover_art_url,
+                                            preview: tr_preview,
+                                            artist: tr_artist,
+                                        });
+                                        block.add(track_view);
+                                    }
+                                }
+                            :pause_all_tracks
+                                {
+                                    var except = data.hasOwnProperty('except') ? data.except : '';
+                                    var children = block.children();
+                                    for (var c in children) {
+                                        if (children[c].type() == 'sp-track-view' && (except == '' || children[c].mark() != except)) {
+                                            var playing = children[c].child('cover_art/player').key('playing');
+                                            if (playing && playing == 'true') {
+                                                children[c].child('cover_art/player/play_button').on('click', { automated: true });
+                                            }
+                                        }
+                                    }
                                 }
                             sp-track-view example_track
                                 id sampleID_abcdefg
