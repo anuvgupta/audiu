@@ -4,7 +4,6 @@
 import os
 import json
 import time
-import numpy
 import keras
 import random
 import pandas

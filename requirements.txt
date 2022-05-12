@@ -1,14 +1,12 @@
-numpy
 flask
 keras
 pandas
 spotipy
 eventlet
 requests
-websockets
-flask-sock
 mongoengine
 scikit-learn
+flask-socketio
 flask_mongoengine
-tensorflow
-wrapt==1.11.*
+tensorflow-cpu
+scikeras
