@@ -820,7 +820,7 @@ app
                         div content
                             css
                                 position absolute
-                                top 80px
+                                top 75px
                                 left 0
                                 width 100%
                                 box-sizing border-box
@@ -836,7 +836,7 @@ app
                                 artist Track Artist
                                 album Track Album
                                 link http://spotify.com
-                                preview https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNYn6ru1tFjLlJmddZ_xIjEPrK8isac41Opg&usqp=CAU
+                                //preview https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNYn6ru1tFjLlJmddZ_xIjEPrK8isac41Opg&usqp=CAU
                         block details
                             css
                                 position absolute
@@ -897,7 +897,7 @@ app
                                 css
                                     color #eee
                                     font-size 14px
-                                    letter-spacing 0.5px
+                                    letter-spacing 0.7px
                     div spacer2-5
                         css
                             height 10px

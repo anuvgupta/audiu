@@ -191,35 +191,158 @@
 !sp-track-view
     init
         {
+            var h = 130;
+            var sp = 12;
+            var of = 8;
             var block = Block('div');
             block
                 .css({
                     width: '100%',
-                    height: '130px',
+                    height: h + 'px',
                     boxSizing: 'border-box',
-                    borderBottom: '1px solid #1e1e1e'
+                    borderBottom: '1px solid #1e1e1e',
+                    position: 'relative'
                 })
+                .add(Block('div', 'preview')
+                    .css({
+                        height: h + 'px',
+                        width: h + 'px',
+                        position: 'absolute',
+                        top: '0',
+                        bottom: '0',
+                    })
+                    .add(Block('image', 'preview_img')
+                        .data({
+                            height: h + 'px',
+                            width: h + 'px',
+                            src: '/img/default_cover.png'
+                        })
+                    )
+                )
+                .add(Block('div', 'name')
+                    .css({
+                        position: 'absolute',
+                        top: '0',
+                        right: '0',
+                        height: (h/2 - sp/2 - of) + 'px',
+                        width: 'calc(100% - ' + h + 'px)',
+                        textAlign: 'left',
+                        display: 'flex',
+                        boxSizing: 'border-box',
+                        paddingLeft: '35px'
+                    })
+                    .add(Block('text', 'text')
+                        .data('Track Title')
+                        .css({
+                            alignSelf: 'flex-end',
+                            color: 'white',
+                            fontSize: '28px',
+                            letterSpacing: '1.2px'
+                        })
+                    )
+                )
+                .add(Block('div', 'details')
+                    .css({
+                        position: 'absolute',
+                        bottom: '0',
+                        right: '0',
+                        height: (h/2 - sp/2 + of) + 'px',
+                        width: 'calc(100% - ' + h + 'px)',
+                        textAlign: 'left',
+                        boxSizing: 'border-box',
+                        paddingLeft: '35px'
+                    })
+                    .add(Block('text', 'artist')
+                        .data('Track Artist(s)')
+                        .css({
+                            color: 'white',
+                            fontSize: '18px',
+                            letterSpacing: '1px'
+                        })
+                    )
+                    .add(Block('div')
+                        .css('height', '2px')
+                    )
+                    .add(Block('text', 'album')
+                        .data('Track Album Name')
+                        .css({
+                            color: 'white',
+                            fontSize: '14px',
+                            letterSpacing: '0.8px',
+                            fontWeight: '200',
+                            fontStyle: 'italic'
+                        })
+                    )
+                )
+                .add(Block('block', 'launch')
+                    .css({
+                        position: 'absolute',
+                        right: '5px',
+                        top: '0',
+                        height: h + 'px',
+                        width: h + 'px'
+                    })
+                    .add(Block('button', 'img_btn')
+                        .css({
+                            height: (h/2) + 'px',
+                            width: (h/2) + 'px',
+                            borderRadius: '100%',
+                            backgroundColor: '#252525',
+                            border: '1px solid #272727',
+                            transition: 'opacity 0.2s ease',
+                            opacity: '1',
+                            outline: 'none'
+                        })
+                        .add(Block('a', 'link')
+                            .attribute('target', '_blank')
+                            .attribute('href', '#')
+                            .add(Block('block', 'content')
+                                .add(Block('image', 1)
+                                    .data({
+                                        height: '28px',
+                                        width: '28px',
+                                        src: 'img/launch_w.png',
+                                        css: { margin: '0 auto', opacity: '0.8' }
+                                    })
+                                )
+                            )
+                            .on('mouseover', (e, b, d) => {
+                                b.css('opacity', '0.7');
+                            })
+                            .on('mouseout', (e, b, d) => {
+                                b.css('opacity', '1');
+                            })
+                        )
+                    )
+                )
             ;
             return block;
         }
-    block
+    load
         {
             data('id', id => {
                 block.key('id', id);
             });
             data('name', name => {
                 block.key('name', name);
+                block.child('name/text').html('').data(name);
             });
             data('artist', artist => {
                 block.key('artist', artist);
+                block.child('details/artist').html('').data(artist);
             });
             data('album', album => {
                 block.key('album', album);
+                block.child('details/album').html('').data(album);
             });
             data('link', link => {
                 block.key('link', link);
+                block.child('launch/img_btn/link').attribute('href', link);
             });
             data('preview', preview => {
                 block.key('preview', preview);
+                block.child('preview/preview_img').data({
+                    'src': preview
+                });
             });
         }
