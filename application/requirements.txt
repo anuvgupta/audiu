@@ -3,8 +3,10 @@ flask
 keras
 pandas
 spotipy
+eventlet
 requests
 websockets
+flask-sock
 mongoengine
 scikit-learn
 flask_mongoengine

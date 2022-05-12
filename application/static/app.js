@@ -1,7 +1,6 @@
 /* AUDIU */
 // web client
 
-const ws_debug_port = 8002;
 
 var app = {
     ui: {
@@ -165,54 +164,65 @@ var app = {
     ws: {
         id: 0,
         socket: null,
-        url:
-            (location.protocol === 'https:' ? 'wss://' : 'ws://') + document.domain +
-            (document.domain == 'localhost' ? `:${ws_debug_port}` : ((location.protocol === 'https:' ? ':443' : ':80') + '/socket')),
         connect: callback => {
-            var socket = new WebSocket(app.ws.url);
-            socket.addEventListener('open', e => {
+            // var socket = new WebSocket(app.ws.url);
+            // socket.addEventListener('open', e => {
+            //     console.log('[ws] socket connected');
+            //     callback();
+            // });
+            // socket.addEventListener('error', e => {
+            //     console.log('[ws] socket error ', e.data);
+            // });
+            // socket.addEventListener('message', e => {
+            //     var d = e.data;
+            //     if (d != null) {
+            //         console.log(`[ws] socket received: ${d}`);
+            //         var d_split = d.split(':');
+            //         var event_name = d_split[0];
+            //         var event_data = d_split[1];
+            //         switch (event_name) {
+            //             case "notify":
+            //                 app.ui.block.data({ "run_complete": event_data });
+            //             default:
+            //                 break;
+            //         }
+            //     } else {
+            //         console.log('[ws] socket received:', 'invalid message', e.data);
+            //     }
+            // });
+            // socket.addEventListener('close', e => {
+            //     console.log('[ws] socket disconnected');
+            //     app.ui.display_modal.disconnected();
+            // });
+            // window.addEventListener('beforeunload', e => {
+            //     // socket.close(1001);
+            // });
+            // app.ws.socket = socket;
+            var socket = io();
+            socket.on('connect', function () {
                 console.log('[ws] socket connected');
                 callback();
             });
-            socket.addEventListener('error', e => {
-                console.log('[ws] socket error ', e.data);
-            });
-            socket.addEventListener('message', e => {
-                var d = e.data;
-                if (d != null) {
-                    console.log(`[ws] socket received: ${d}`);
-                    var d_split = d.split(':');
-                    var event_name = d_split[0];
-                    var event_data = d_split[1];
-                    switch (event_name) {
-                        case "notify":
-                            app.ui.block.data({ "run_complete": event_data });
-                        default:
-                            break;
-                    }
-                } else {
-                    console.log('[ws] socket received:', 'invalid message', e.data);
-                }
-            });
-            socket.addEventListener('close', e => {
+            socket.on('disconnect', () => {
                 console.log('[ws] socket disconnected');
                 app.ui.display_modal.disconnected();
             });
-            window.addEventListener('beforeunload', e => {
-                // socket.close(1001);
+            socket.on('notify_run', (run_id) => {
+                console.log('[ws] run complete: ' + run_id);
+                app.ui.block.data({ "run_complete": run_id });
             });
             app.ws.socket = socket;
         },
-        send: (data) => {
-            console.log('[ws] sending:', data);
-            app.ws.socket.send(data);
+        send: (event, data) => {
+            console.log('[ws] sending:', event, data);
+            app.ws.socket.emit(event, data);
         },
         api: {
             send_message: (msg) => {
-                app.ws.send(`msg:${msg}`);
+                app.ws.send(`msg`, `${msg}`);
             },
             subscribe_run_updates: (target_run_id) => {
-                app.ws.send(`sub:${target_run_id}`);
+                app.ws.send(`subscribe_run`, `${target_run_id}`);
             }
         }
     },

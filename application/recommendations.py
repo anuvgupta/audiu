@@ -3,7 +3,6 @@
 
 import os
 import json
-from re import T
 import time
 import numpy
 import keras

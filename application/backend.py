@@ -2,20 +2,15 @@
 # backend.py
 
 import os
-import sys
 import json
 import time
 import flask
 import base64
 import pathlib
 import requests
-import waitress
 import mongoengine
-import multiprocessing
+import flask_socketio
 import flask_mongoengine
-
-# local imports
-import sockets
 
 # constants
 DB_ID_LEN = 24
@@ -35,7 +30,9 @@ class Backend():
         db_port = int(db_port)
         mp_queue_size = int(mp_queue_size)
         prod = bool(prod)
-        bk = Backend('static', 'templates', host, port, port + 1, dataset, db_host, db_port, db_name, model_run_src, mp_queue_size, backend_signal_queue)
+        # ws_port = port + 1
+        ws_port = port
+        bk = Backend('static', 'templates', host, port, ws_port, dataset, db_host, db_port, db_name, model_run_src, mp_queue_size, backend_signal_queue)
         bk.run_forever(prod)
 
     # update model run record status/inference output with local PUT request to backend
@@ -91,8 +88,8 @@ class Backend():
     template_folder = None
     static_url_path = None
     package_dir_path = None
-    socket_process = None
-    socket_signal_queue = None
+    socket_server = None
+    socket_clients = None
     backend_signal_queue = None
     model_run_src = ''
     host = ''
@@ -127,8 +124,8 @@ class Backend():
         self.db_port = db_port
         self.db_local = {}
         self.db_engine = None
-        self.socket_process = None
-        self.socket_signal_queue = None
+        self.socket_server = None
+        self.socket_clients = None
         self.backend_signal_queue = backend_signal_queue
         self.model_run_src = model_run_src
         self.mp_queue_size = mp_queue_size
@@ -143,10 +140,49 @@ class Backend():
     # start both servers in parallel & connect to db
     def run_forever(self, production=False):
         self.database_init(str(production))
-        self.socket_signal_queue = multiprocessing.Queue(self.mp_queue_size)
-        self.socket_process = multiprocessing.Process(target=sockets.Sockets.socket_run, args=(str(production), str(self.host), str(self.ws_port), self.socket_signal_queue))
-        self.socket_process.start()
+        self.socket_init(str(production))
         self.web_serve(str(production))
+
+    ## WEBSOCKET API ##
+    def socket_init(self, production='False'):
+        self.socket_clients = {}
+        self.socket_server = flask_socketio.SocketIO()
+        self.socket_server.init_app(self.flask_app)
+
+        def sock_connect(auth):
+            client_id = str(flask.request.sid)
+            print(f'[ws] client {client_id} connected')
+            if client_id not in self.socket_clients:
+                self.socket_clients[client_id] = {'watching_runs': [], 'complete_runs': []}
+
+        def sock_disconnect():
+            client_id = str(flask.request.sid)
+            print(f'[ws] client {client_id} disconnected')
+            del self.socket_clients[client_id]
+
+        def sock_subscribe_run(run_id):
+            client_id = str(flask.request.sid)
+            if run_id and len(run_id) > 0:
+                print(f'[ws] client {client_id} subscribed to run {run_id}')
+                self.socket_clients[client_id]['watching_runs'].append(run_id)
+                print(self.socket_clients)
+
+        self.socket_server.on_event('connect', sock_connect)
+        self.socket_server.on_event('disconnect', sock_disconnect)
+        self.socket_server.on_event('subscribe_run', sock_subscribe_run)
+
+    def socket_send(self, client_id, event, data):
+        self.socket_server.emit(event, data, room=client_id)
+
+    def socket_notify(self, run_id):
+        for c in self.socket_clients.keys():
+            watching_runs = self.socket_clients[c]['watching_runs']
+            for watching_run in watching_runs:
+                if watching_run == run_id:
+                    self.socket_clients[c]['complete_runs'].append(run_id)
+                    self.socket_clients[c]['watching_runs'].remove(run_id)
+            for target_run_id in self.socket_clients[c]['complete_runs']:
+                self.socket_send(c, 'notify_run', target_run_id)
 
     ## DATABASE API ##
     # mongo configuration object subclass
@@ -434,7 +470,7 @@ class Backend():
                     return (flask.jsonify({'success': False, 'message': 'Server error (failed to update new model run record inference accuracy in database).'}), 500)
             # send update notification over socket if available
             if status_update == 'complete':
-                self.socket_signal_queue.put(f"notify:{target_run_id}")
+                self.socket_notify(target_run_id)
             # return success
             return flask.jsonify({
                 'success': True,
@@ -456,7 +492,4 @@ class Backend():
     def web_serve(self, production='False'):
         production = bool(production)
         self.bind_routes()
-        if production:
-            waitress.serve(self.flask_app, host=self.host, port=self.web_port)
-        else:
-            self.flask_app.run(host=self.host, port=self.web_port, debug=True)
+        self.socket_server.run(self.flask_app, host=self.host, port=self.web_port)
