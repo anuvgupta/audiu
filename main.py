@@ -12,18 +12,20 @@ import backend
 import recommendations
 
 # constants
+PROD = True
 HOST = '0.0.0.0'
 PORT = int(os.environ.get('PORT', 8001))
 HOST_PORT = f'{HOST}:{PORT}'
 CONFIG = 'config.json'
 DATASET = 'dataset.json'
 DB_NAME = 'audiu'
-DB_HOST = 'localhost'
-DB_PORT = 27017
+DB_USER = 'heroku'
+DB_PASS = 'mp6bSDo65euKNbuU'
+DB_HOST = f"mongodb+srv://{DB_USER}:{DB_PASS}@{DB_NAME}.q1toy.mongodb.net/{DB_NAME}?retryWrites=true&w=majority" if PROD else 'localhost'
+DB_PORT = 80 if PROD else 27017
 MODEL_RUN_SRC = 'data/runs'
 MP_QUEUE_SIZE = 15
 DEL_FS_REC = True
-PROD = True
 
 
 ## MAIN ##
