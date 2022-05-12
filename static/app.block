@@ -961,6 +961,9 @@ app
             div spacer3
                 css
                     height 50px 
+            div spacer4
+                css
+                    height 100px 
         block modal
             css
                 position fixed
