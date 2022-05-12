@@ -25,8 +25,6 @@ MP_QUEUE_SIZE = 15
 DEL_FS_REC = True
 PROD = True
 
-print(HOST, PORT, HOST_PORT)
-
 
 ## MAIN ##
 # main entry point
