@@ -50,3 +50,7 @@ a website to provide public music recommendations from your model.
 - Relevant Tutorial: https://medium.com/deep-learning-turkey/build-your-own-spotify-playlist-of-best-playlist-recommendations-fc9ebe92826a
 - Relevant Tutorial: https://towardsdatascience.com/making-your-own-discover-weekly-f1ac7546fedb
 - Research from EE460J: https://docs.google.com/document/d/1gZXfVt5BDFxPx4AEEJXw3Zb54qmcvJEt-rBWhJXcC2s/edit
+
+## disclaimer
+
+This project is in no way associated with Spotify or Spotify's music recommendations; however it makes use of the audio feature API Spotify provides publicly.
