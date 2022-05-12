@@ -59,7 +59,12 @@ app
             background-size auto
             background-repeat repeat
             background-attachment fixed
-            opacity 0.05
+            opacity 0.4
+        div particles-js
+            id particles-js
+            css
+                width 100%
+                height 100%
 
     div main
         css
@@ -651,9 +656,9 @@ app
                             width 80%
                             max-width 600px
                             height 600px
-                            background-color #1a1a1a
+                            background-color rgba(200,200,200,0)
                             border-radius 6px
-                            border 1px solid #1e1e1e
+                            border 1px solid rgba(200,200,200,0)
                             margin 0 auto
                         div spacer0
                             css
@@ -750,6 +755,8 @@ app
                             margin 0 auto
                             display none
                             position relative
+                            -webkit-box-shadow 2px 4px 15px 3px rgba(5,5,5,0.2)
+                            box-shadow 2px 4px 15px 3px rgba(5,5,5,0.2)
                         #model_type
                             {
                                 model_name = 'Smart Model';

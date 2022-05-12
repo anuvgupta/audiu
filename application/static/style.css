@@ -9,8 +9,9 @@
 body {
     text-align: center;
     /* background-color: #f9f9f9; */
-    background-color: #171717;
+    background-color: #101010;
 }
+
 * {
     font-family: 'Barlow', 'Source Sans Pro', Trebuchet, Verdana, Helvetica, Arial, sans-serif;
 }
@@ -21,6 +22,7 @@ a {
     text-decoration: none;
     cursor: pointer;
 }
+
 a:hover {
     color: rgba(10, 115, 242, 0.75);
     text-decoration: none;
@@ -71,9 +73,11 @@ div.bootbox.modal {
 .bootbox-confirm div div div button.btn-primary {
     background-color: #555 !important;
 }
+
 .bootbox-confirm div div div button.btn-primary:hover {
     background-color: #444 !important;
 }
+
 .bootbox-confirm div div div button.btn-primary:active {
     background-color: #888 !important;
 }
@@ -81,9 +85,11 @@ div.bootbox.modal {
 a.link-white {
     color: #d8d8d8;
 }
+
 a.link-white:hover {
     color: #fff;
 }
+
 a.link-white:active {
     color: #fff;
 }

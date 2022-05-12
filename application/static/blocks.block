@@ -345,10 +345,10 @@
                 .add(Block('block', 'launch')
                     .css({
                         position: 'absolute',
-                        right: '5px',
+                        right: '0',
                         top: '0',
                         height: h + 'px',
-                        width: h + 'px'
+                        width: (h - 20) + 'px'
                     })
                     .add(Block('button', 'img_btn')
                         .css({
