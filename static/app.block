@@ -347,7 +347,7 @@ app
                         css
                             color white
                             font-size 17px
-                            display block
+                            display none
                             margin-top 15px
                             line-height 120%
                             width 90%
@@ -355,7 +355,20 @@ app
                             margin-left auto
                             margin-right auto
                             //font-style italic
+                    div spacer1
+                        css
+                            height 10px
+                    div genre_bubbles
+                        css
+                            height 100px
+                            background-color red
+                        // TODO: build genre bubble selector
+                    div spacer2
+                        css
+                            height 10px
                     input genre_input
+                        css 
+                            display none
                         {
                             var genres_list = app.main.get_genre_list();
                             block.attribute('placeholder', `${genres_list[util.rand_int(0, genres_list.length - 1)]}`);
@@ -372,6 +385,8 @@ app
                                 //}
                             }
                     div extra_inputs
+                        css
+                            display none
                         {
                             block.key('refocus', 0);
                         }
@@ -430,7 +445,12 @@ app
                                     } else {
                                         refocus_b = block.sibling('genre_input');
                                     }
-                                    if (refocus_b) refocus_b.node().focus();
+                                    if (refocus_b) {
+                                        alert(`${refocus_b.mark()}`);
+                                        if (!util.mobileAndTablet())
+                                            refocus_b.node().focus();
+                                        else refocus_b.node().click();
+                                    }
                                 }, 10);
                             }
                         :empty
@@ -459,6 +479,16 @@ app
                             } else block.css('border', 'none');
                         }
                         :click
+                            {
+                                var genres_list = app.main.get_genre_list();
+                                var _next = _ => {
+                                    // TODO: check genre bubbles
+                                    console.log("checking genre bubbles");
+                                };
+                                setTimeout(_next, 50);
+                                event.stopPropagation();
+                            }
+                        :click_old
                             {
                                 var genres_list = app.main.get_genre_list();
                                 block.sibling('extra_inputs').on('update_num_inputs', { genres_filter_enable: true });
