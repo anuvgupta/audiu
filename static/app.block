@@ -262,7 +262,7 @@ app
                         {
                             if (!util.mobileAndTablet()) {
                                 block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
-                            }
+                            } else block.css('border', 'none');
                         }
                         :click
                             {
@@ -456,7 +456,7 @@ app
                         {
                             if (!util.mobileAndTablet()) {
                                 block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
-                            }
+                            } else block.css('border', 'none');
                         }
                         :click
                             {
@@ -585,7 +585,7 @@ app
                         {
                             if (!util.mobileAndTablet()) {
                                 block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
-                            }
+                            } else block.css('border', 'none');
                         }
                         :click
                             {
