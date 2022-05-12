@@ -13,7 +13,7 @@ import recommendations
 
 # constants
 HOST = '0.0.0.0'
-PORT = 8001
+PORT = int(os.environ.get('PORT', 8001))
 HOST_PORT = f'{HOST}:{PORT}'
 CONFIG = 'config.json'
 DATASET = 'dataset.json'
@@ -24,11 +24,6 @@ MODEL_RUN_SRC = 'data/runs'
 MP_QUEUE_SIZE = 15
 DEL_FS_REC = True
 PROD = True
-# heroku
-HEROKU = os.environ.get('ON_HEROKU')
-if HEROKU:
-    PORT = int(os.environ.get('PORT', 17995))
-HOST_PORT = f'{HOST}:{PORT}'
 
 print(HOST, PORT, HOST_PORT)
 
