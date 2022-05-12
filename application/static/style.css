@@ -95,3 +95,8 @@ a.link-white:hover {
 a.link-white:active {
     color: #fff;
 }
+
+div.readme_modal h1 {
+    text-align: center;
+    margin-top: 12px;
+}

@@ -43,6 +43,13 @@ app
             }
         }
 
+    #update_readme
+        {
+            block.child('main/modal/modal_content').data({
+                raw_html: update_readme
+            });
+        }
+
     div background
         css
             z-index -5
@@ -250,6 +257,7 @@ app
                             height 50px
                             width 100px
                             border-radius 3px
+                            opacity 0.9
                         :click
                             {
                                 var values = [];
@@ -437,6 +445,7 @@ app
                             height 50px
                             width 100px
                             border-radius 3px
+                            opacity 0.9
                         :click
                             {
                                 var genres_list = app.main.get_genre_list();
@@ -559,6 +568,7 @@ app
                             height 50px
                             width 100px
                             border-radius 3px
+                            opacity 0.9
                         :click
                             {
                                 var selected_model = block.sibling('model_selector').node().value;
@@ -951,4 +961,126 @@ app
             div spacer3
                 css
                     height 50px 
+        block modal
+            css
+                position fixed
+                top 0
+                left 0
+                height 100%
+                width 100%
+                z-index 100
+                background-color rgba(5,5,5,0.6)
+                transition opacity 0.35s ease
+                display table
+                opacity 1
+            :show
+                {
+                    block.css('display', 'table');
+                    setTimeout(_ => {
+                        block.css('opacity', '1');
+                    }, 100);
+                }
+            :hide
+                {
+                    setTimeout(_ => {
+                        block.css('opacity', '0');
+                        setTimeout(_ => {
+                            block.css('display', 'none');
+                        }, 360);
+                    }, 10);
+                }
+            :click
+                {
+                    block.on('hide');
+                }
+            div modal_content
+                css
+                    width 80%
+                    max-width 600px
+                    height 90%
+                    max-height 700px
+                    background-color #111
+                    border 1px solid #161616
+                    border-radius 8px
+                    margin 0 auto
+                    -webkit-box-shadow 2px 4px 15px 3px rgba(5,5,5,0.2)
+                    box-shadow 2px 4px 15px 3px rgba(5,5,5,0.2)
+                    padding 20px 50px 20px 50px
+                    box-sizing border-box
+                class readme_modal
+                :click
+                    {
+                        event.stopPropagation();
+                    }
+                #raw_html
+                    {
+                        block.child('modal_subcontent').html(raw_html);
+                    }
+                div modal_subcontent
+                    css
+                        width 100%
+                        height 100%
+                        overflow-x hidden
+                        overflow-y auto
+                        color white
+                        text-align left
+        div footer
+            css
+                position fixed
+                bottom 0
+                left 0
+                width 100%
+                height 80px
+            block github
+                css
+                    position absolute
+                    bottom 0
+                    right 0
+                    height 80px
+                    width 90px
+                a link
+                    href https://github.com/anuvgupta/audiu
+                    target _blank
+                    image img
+                        src /img/github_w.png
+                        height 40px
+                        width 40px
+                        css
+                            margin 0 auto
+                    css
+                        opacity 0.2
+                        cursor pointer
+                        transition 0.2s ease
+                    :mouseover
+                        css
+                            opacity 0.8
+                    :mouseout
+                        css
+                            opacity 0.2
+            block info
+                css
+                    position absolute
+                    bottom 0
+                    left 0
+                    height 80px
+                    width 90px
+                image img
+                    src /img/info_w.png
+                    height 45px
+                    width 45px
+                    css
+                        opacity 0.2
+                        cursor pointer
+                        transition 0.2s ease
+                        margin 0 auto
+                    :mouseover
+                        css
+                            opacity 0.8
+                    :mouseout
+                        css
+                            opacity 0.2
+                    :click
+                        {
+                            block.parent(1).sibling('modal').on('show');
+                        }
 

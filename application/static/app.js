@@ -6,6 +6,8 @@ const ws_debug_port = 8002;
 var app = {
     ui: {
         block: null,
+        readme_text: '',
+        readme_html: '',
         display_modal: {
             disconnected: (_) => {
                 bootbox.hideAll();
@@ -35,31 +37,43 @@ var app = {
         load_particles_bg: next => {
             particlesJS.load('particles-js', '/lib/particlesjs-config.json', next);
         },
+        markdown_to_html: (markdown) => {
+            var converter = new showdown.Converter();
+            var html = converter.makeHtml(markdown);
+            return html;
+        },
         init: (callback) => {
             app.ui.block.fill(document.body);
             Block.queries();
             setTimeout(_ => {
-                app.ui.load_particles_bg(_ => {
-                    setTimeout((_) => {
-                        if (app.main.config.target_run_id != '') {
-                            app.ui.block.data({
-                                target_run_id: app.main.config.target_run_id
-                            });
-                        }
-                        app.ui.block.css("opacity", "1");
-                        app.ui.block.on("ready");
-                        setTimeout(_ => {
-                            // enable ripple effect on material-ui buttons after generated and injected by block.js
-                            window.componentHandler.upgradeDom();
+                app.web.api.get_readme(data => {
+                    app.ui.readme_text = data;
+                    app.ui.readme_html = app.ui.markdown_to_html(app.ui.readme_text);
+                    app.ui.block.data({
+                        update_readme: app.ui.readme_html
+                    });
+                    app.ui.load_particles_bg(_ => {
+                        setTimeout((_) => {
+                            if (app.main.config.target_run_id != '') {
+                                app.ui.block.data({
+                                    target_run_id: app.main.config.target_run_id
+                                });
+                            }
+                            app.ui.block.css("opacity", "1");
+                            app.ui.block.on("ready");
+                            setTimeout(_ => {
+                                // enable ripple effect on material-ui buttons after generated and injected by block.js
+                                window.componentHandler.upgradeDom();
+                            }, 100);
                         }, 100);
-                    }, 100);
-                    setTimeout((_) => {
-                        Block.queries();
                         setTimeout((_) => {
                             Block.queries();
-                        }, 200);
-                    }, 50);
-                    callback();
+                            setTimeout((_) => {
+                                Block.queries();
+                            }, 200);
+                        }, 50);
+                        callback();
+                    });
                 });
             }, 50);
         },
@@ -115,8 +129,6 @@ var app = {
                         callback(data.data);
                 }, (data, error, status) => {
                     console.error(`HTTP request error with "generate_recommendations": ${status}`);
-                    // console.log(error);
-                    // console.log(data);
                     if (data.hasOwnProperty('message')) {
                         console.log(data.message);
                         app.ui.display_modal.generic_confirm("Recommendations Model Error", `Server Error: ${data.message}`, (s) => { /* console.log(s); */ });
@@ -131,12 +143,21 @@ var app = {
                         callback(data.data);
                 }, (data, error, status) => {
                     console.error(`HTTP request error with "generate_recommendations": ${status}`);
-                    // console.log(error);
-                    // console.log(data);
                     if (data.hasOwnProperty('message')) {
                         console.log(data.message);
                         app.ui.display_modal.generic_confirm("Recommendations Model Error", `Server Error: ${data.message}`, (s) => { /* console.log(s); */ });
                     }
+                });
+            },
+            get_readme: (callback = null) => {
+                app.web.get("README.md", {}, (data) => {
+                    if (typeof data === 'string') {
+                        if (callback) callback(data);
+                    }
+                }, (data, error, status) => {
+                    console.error(`HTTP request error with "get_readme": ${status}`);
+                    if (data.hasOwnProperty('message'))
+                        console.log(data.message);
                 });
             }
         }
