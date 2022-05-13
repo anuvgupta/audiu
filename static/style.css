@@ -100,3 +100,11 @@ div.readme_modal h1 {
     text-align: center;
     margin-top: 12px;
 }
+
+div.genre-bubble {
+    display: inline-block;
+}
+
+div.genre-bubble button {}
+
+button.styled-like-mdl {}

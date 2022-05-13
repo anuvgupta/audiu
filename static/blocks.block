@@ -188,6 +188,59 @@
         }
 
 // app-specific blocks
+!genre-bubble
+    init
+        {
+            var block = Block('div');
+            var activeColor = '#3a3a3a';
+            var inactiveColor = '#141414';
+            block
+                .class('genre-bubble')
+                .css({
+                    width: 'auto',
+                    height: '50px',
+                    margin: '4px 5px'
+                })
+                .add(Block('button', 1)
+                    .html('genre')
+                    .class(!util.mobileAndTablet() ? 'mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored' : 'styled-like-mdl')
+                    .css({
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: inactiveColor,
+                        fontSize: '13px',
+                        letterSpacing: '1px',
+                        borderRadius: '3px',
+                        opacity: '0.9',
+                        color: 'white',
+                        outline: 'none',
+                        padding: '0px 20px'
+                    })
+                    .key('active', 'no')
+                    .on('click', (e, b, d) => {
+                        var active = b.key('active');
+                        if (active == 'no') {
+                            b.css('background-color', activeColor);
+                            b.key('active', 'yes')
+                        } else if (active == 'yes') {
+                            b.css('background-color', inactiveColor);
+                            b.key('active', 'no')
+                        }
+                    })
+                )
+            ;
+            return block;
+        }
+    load
+        {
+            data('text', text => {
+                block.key('text', text);
+                block.child('button').html('').html(text);
+            });
+            data('slug', slug => {
+                block.key('slug', slug);
+            });
+        }
 !sp-track-view
     init
         {

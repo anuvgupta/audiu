@@ -5,6 +5,7 @@
 var app = {
     ui: {
         block: null,
+        genre_form_select_mode: 'bubbles',
         readme_text: '',
         readme_html: '',
         display_modal: {
@@ -58,6 +59,9 @@ var app = {
                                     target_run_id: app.main.config.target_run_id
                                 });
                             }
+                            app.ui.block.data({
+                                genre_form_select_mode: app.ui.genre_form_select_mode
+                            });
                             app.ui.block.css("opacity", "1");
                             app.ui.block.on("ready");
                             setTimeout(_ => {

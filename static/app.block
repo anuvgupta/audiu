@@ -50,6 +50,13 @@ app
             });
         }
 
+    #genre_form_select_mode
+        {
+            block.child('main/content/model_form/page2').data({
+                genre_form_select_mode: genre_form_select_mode
+            });
+        }
+
     div background
         css
             z-index -5
@@ -249,8 +256,7 @@ app
                     button submit_btn
                         html GO
                         css
-                            outline none
-                            background-color #333
+                            background-color #222
                             font-size 17px
                             letter-spacing 2px
                             height 50px
@@ -291,12 +297,37 @@ app
                     {
                         block.key('genre_selections', []);
                     }
+                    #genre_form_select_mode
+                        {
+                            if (genre_form_select_mode == 'bubbles') {
+                                block.child('genre_input').on('hide');
+                                block.child('extra_inputs').on('hide');
+                                block.child('genre_bubbles').on('show');
+                                block.child('spacer2').on('show');
+                                block.child('spacer1').on('show');
+                                block.child('subprompt').on('hide');
+                            } else if (genre_form_select_mode == 'text') {
+                                block.child('genre_bubbles').on('hide');
+                                block.child('genre_input').on('show');
+                                block.child('extra_inputs').on('show');
+                                block.child('spacer2').on('hide');
+                                block.child('spacer1').on('hide');
+                                block.child('subprompt').on('show');
+                            }
+                            
+                        }
                     :hide
                         css
                             display none
+                        {
+                            event.stopPropagation();
+                        }
                     :show
                         css
                             display block
+                        {
+                            event.stopPropagation();
+                        }
                     css
                         display none
                         margin 0 auto
@@ -344,6 +375,18 @@ app
                         {
                             block.html(`[&nbsp; <b>genres:</b> ${app.main.get_genre_list_str()} &nbsp;]`);
                         }
+                        :hide
+                            css
+                                display none
+                            {
+                                event.stopPropagation();
+                            }
+                        :show
+                            css
+                                display block
+                            {
+                                event.stopPropagation();
+                            }
                         css
                             color white
                             font-size 17px
@@ -351,24 +394,99 @@ app
                             margin-top 15px
                             line-height 120%
                             width 90%
-                            max-width 700px
+                            max-width 800px
                             margin-left auto
                             margin-right auto
                             //font-style italic
                     div spacer1
+                        :hide
+                            css
+                                display none
+                            {
+                                event.stopPropagation();
+                            }
+                        :show
+                            css
+                                display block
+                            {
+                                event.stopPropagation();
+                            }
                         css
-                            height 10px
+                            height 20px
                     div genre_bubbles
                         css
-                            height 100px
-                            background-color red
-                        // TODO: build genre bubble selector
+                            height auto
+                            width 80%
+                            max-width 700px
+                            margin 0 auto
+                        :hide
+                            css
+                                display none
+                            {
+                                event.stopPropagation();
+                            }
+                        :show
+                            css
+                                display block
+                            {
+                                event.stopPropagation();
+                            }
+                        :obtain_genres
+                            {
+                                var active_genre_list = [];
+                                var children = block.children();
+                                for (var c in children) {
+                                    if (children[c].type() == 'genre-bubble') {
+                                        if (children[c].child('button').key('active') == 'yes') {
+                                            active_genre_list.push(children[c].key('slug'));
+                                        }
+                                    }
+                                }
+                                if (data.callback) data.callback(active_genre_list);
+                            }
+                        {
+                            var genres_list = app.main.get_genre_list();
+                            for (var g in genres_list) {
+                                var genre_text = genres_list[g];
+                                var genre_slug = app.main.reverse_genre_correction(genre_text);
+                                //console.log(genre_text, genre_slug);
+                                var genre_view = Block('genre-bubble', `bubble_${genre_slug}`).data({
+                                    'text': genre_text,
+                                    'slug': genre_slug
+                                });
+                                block.add(genre_view);
+                            }
+                        }
                     div spacer2
+                        :hide
+                            css
+                                display none
+                            {
+                                event.stopPropagation();
+                            }
+                        :show
+                            css
+                                display block
+                            {
+                                event.stopPropagation();
+                            }
                         css
-                            height 10px
+                            height 20px
                     input genre_input
                         css 
                             display none
+                        :hide
+                            css
+                                display none
+                            {
+                                event.stopPropagation();
+                            }
+                        :show
+                            css
+                                display block
+                            {
+                                event.stopPropagation();
+                            }
                         {
                             var genres_list = app.main.get_genre_list();
                             block.attribute('placeholder', `${genres_list[util.rand_int(0, genres_list.length - 1)]}`);
@@ -387,6 +505,18 @@ app
                     div extra_inputs
                         css
                             display none
+                        :hide
+                            css
+                                display none
+                            {
+                                event.stopPropagation();
+                            }
+                        :show
+                            css
+                                display block
+                            {
+                                event.stopPropagation();
+                            }
                         {
                             block.key('refocus', 0);
                         }
@@ -463,8 +593,7 @@ app
                     button submit_btn
                         html GO
                         css
-                            outline none
-                            background-color #333
+                            background-color #222
                             font-size 17px
                             letter-spacing 2px
                             height 50px
@@ -482,8 +611,21 @@ app
                             {
                                 var genres_list = app.main.get_genre_list();
                                 var _next = _ => {
-                                    // TODO: check genre bubbles
-                                    console.log("checking genre bubbles");
+                                    block.sibling('genre_bubbles').on('obtain_genres', { callback: (values) => {
+                                        console.log("selected genres: ");
+                                        console.log(values);
+                                        block.parent().key('genre_selections', values);
+                                        var min_genre_lim = app.main.config.dataset.config.min_genres;
+                                        if (values.length < min_genre_lim) {
+                                            app.ui.display_modal.generic_confirm('Not Enough Vibes', `Please choose at least ${min_genre_lim} genres!`, (s) => {
+                                                //console.log(s);
+                                            });
+                                        } else {
+                                            block.parent().on('hide')
+                                                .sibling('page3').on('show');
+                                        }
+                                    }});
+                                    
                                 };
                                 setTimeout(_next, 50);
                                 event.stopPropagation();
@@ -602,8 +744,7 @@ app
                     button submit_btn
                         html GO
                         css
-                            outline none
-                            background-color #333
+                            background-color #222
                             font-size 17px
                             letter-spacing 2px
                             height 50px
