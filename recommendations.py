@@ -226,6 +226,10 @@ class Recommendations():
             target_playlist = self.spotipy_client.user_playlist(self.spotify_credentials['playlist_user'], target_playlist_id)
             return target_playlist
 
+        # create playlist with tracklist
+        def sp_create_playlist(self, name, description="", track_ids=[]):
+            pass
+
         # convert playlist ID list to large track ID list (via spotipy)
         def sp_playlists_to_tracks(self, target_playlist_ids, output=True):
             all_target_ids = []
