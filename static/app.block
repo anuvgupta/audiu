@@ -57,6 +57,32 @@ app
             });
         }
 
+    {
+        if (app.main.config.target_run_id && app.main.config.target_run_id != '') {
+            window.history.replaceState({
+                origin: `${window.location.origin}`,
+                form_stage: 1,
+                //run_id: app.main.config.target_run_id
+            }, "", `${window.location.href}`);
+        }
+        window.onpopstate = (event) => {
+            //alert("location: " + document.location + ", state: " + JSON.stringify(event.state));
+            //const url_params = new URLSearchParams(window.location.search);
+            //console.log(url_params);
+            if (event.state.hasOwnProperty('form_stage')) {
+                var target_form_stage = event.state.form_stage;
+                var pages = block.child('main/content/model_form').children();
+                for (var p in pages) {
+                    var page_view = pages[p];
+                    if (page_view.mark() != `page${target_form_stage}`) {
+                        page_view.on('hide');
+                    }
+                }
+                block.child(`main/content/model_form/page${target_form_stage}`).on('show');
+            }
+        }
+    }
+
     div background
         css
             z-index -5
@@ -290,6 +316,10 @@ app
                                 if (values.length > 0) {
                                     block.parent().on('hide')
                                         .sibling('page2').on('show');
+                                    window.history.pushState({
+                                        origin: `${window.location.origin}`,
+                                        form_stage: 2
+                                    }, "", `${window.location.href}`);
                                 }
                                 event.stopPropagation();
                             }
@@ -623,9 +653,12 @@ app
                                         } else {
                                             block.parent().on('hide')
                                                 .sibling('page3').on('show');
+                                            window.history.pushState({
+                                                origin: `${window.location.origin}`,
+                                                form_stage: 3
+                                            }, "", `${window.location.href}`);
                                         }
                                     }});
-                                    
                                 };
                                 setTimeout(_next, 50);
                                 event.stopPropagation();
@@ -779,6 +812,10 @@ app
                                     });
                                     block.parent().on('hide')
                                         .sibling('page4').on('show');
+                                    window.history.pushState({
+                                        origin: `${window.location.origin}`,
+                                        form_stage: 4
+                                    }, "", `${window.location.href}`);
                                 }
                                 event.stopPropagation();
                             }
