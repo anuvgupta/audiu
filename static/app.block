@@ -1343,9 +1343,9 @@ app
             div modal_content
                 css
                     width 80%
-                    max-width 600px
+                    max-width 650px
                     height 90%
-                    max-height 700px
+                    max-height 750px
                     background-color #111
                     border 1px solid #161616
                     border-radius 8px
