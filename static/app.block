@@ -335,6 +335,7 @@ app
                                 block.child('genre_bubbles').on('show');
                                 block.child('spacer2').on('show');
                                 block.child('spacer1').on('show');
+                                block.child('spacer0').on('show');
                                 block.child('subprompt').on('hide');
                             } else if (genre_form_select_mode == 'text') {
                                 block.child('genre_bubbles').on('hide');
@@ -342,6 +343,7 @@ app
                                 block.child('extra_inputs').on('show');
                                 block.child('spacer2').on('hide');
                                 block.child('spacer1').on('hide');
+                                block.child('spacer0').on('hide');
                                 block.child('subprompt').on('show');
                             }
                             
@@ -361,6 +363,21 @@ app
                     css
                         display none
                         margin 0 auto
+                    div spacer0
+                        css
+                            height 40px
+                        :hide
+                            css
+                                display none
+                            {
+                                event.stopPropagation();
+                            }
+                        :show
+                            css
+                                display block
+                            {
+                                event.stopPropagation();
+                            }
                     text hook1
                         html i like what i'm hearing already!
                         css
@@ -862,21 +879,24 @@ app
                         {
                             app.web.api.check_recommendations_status(target_run_id, (data) => {
                                 if (data.run_id == target_run_id) {
+                                    //console.log(data);
                                     if (data.run_status == "created" || data.run_status == "running") {
                                         block.child('data_out_prep/results_loading').on('show');
                                         block.child('data_out_prep/subtext').on('show');
                                         app.ws.api.subscribe_run_updates(target_run_id);
                                     } else if (data.run_status == "complete") {
                                         block.child('data_out_prep').css('display', 'none');
-                                        block.child('data_out').css('display', 'table')
+                                        block.child('data_out')
                                             .data({
                                                 tracklist: data.inference_output,
                                                 results_ratio: data.inference_ratio,
                                                 run_length: data.run_length,
                                                 timing: data.ts_profile,
                                                 accuracy: data.validation_accuracy,
-                                                model_type: data.model_type
-                                            })
+                                                model_type: data.model_type,
+                                                playlist_names: data.playlist_names,
+                                                genre_selections: data.genre_selections
+                                            }).on('show')
                                         ;
                                         // console.log(data);
                                     } else if (data.run_status == "error") {
@@ -994,6 +1014,19 @@ app
                             position relative
                             -webkit-box-shadow 2px 4px 15px 3px rgba(5,5,5,0.2)
                             box-shadow 2px 4px 15px 3px rgba(5,5,5,0.2)
+                            display none
+                            opacity 0
+                            transition opacity 0.4s ease
+                        :show
+                            {
+                                setTimeout(_ => {
+                                    block.css('display', 'table');
+                                    setTimeout(_ => {
+                                        block.css('opacity', '1');
+                                    }, 20);
+                                }, 10);
+                                event.stopPropagation();
+                            }
                         #model_type
                             {
                                 model_name = 'Smart Model';
@@ -1045,6 +1078,20 @@ app
                                     accuracy: accuracy
                                 });
                             }
+                        #playlist_names
+                            {
+                                console.log('playlist_names', playlist_names);
+                                block.child('details').data({
+                                    playlist_names: playlist_names
+                                });
+                            }
+                        #genre_selections
+                            {
+                                console.log('genre_selections', genre_selections);
+                                block.child('details').data({
+                                    genre_selections: genre_selections
+                                });
+                            }
                         block title
                             css
                                 position absolute
@@ -1085,7 +1132,7 @@ app
                                         var track = tracklist[t];
                                         var track_view = Block('sp-track-view', 'track_' + track.id);
                                         track_view.key('track_obj', track);
-                                        var tr_name = track.name.split("(feat.")[0].trim().split("(W/")[0].trim();
+                                        var tr_name = track.name.split("(with ")[0].trim().split("(feat.")[0].trim().split("(W/")[0].trim();
                                         var tr_preview = track.preview_url && track.preview_url.trim().length > 0 ? track.preview_url : '';
                                         var tr_artist = track.artist.length > 1 ? (track.artist.join(', ')) : (track.artist[0]);
                                         track_view.data({
@@ -1135,6 +1182,11 @@ app
                                 block.key('run_length', 0.0);
                                 block.key('time_training', 0.0);
                                 block.key('time_inference', 0.0);
+                                block.key('time_total', 0.0);
+                                block.key('playlist_names', []);
+                                block.key('genre_selections', []);
+
+                                block.key('info_state', 'input');
                             }
                             #accuracy
                                 {
@@ -1166,14 +1218,33 @@ app
                                     block.key('time_total', time_total);
                                     block.on('update_text');
                                 }
+                            #playlist_names
+                                {
+                                    block.key('playlist_names', playlist_names);
+                                    block.on('update_text');
+                                }
+                            #genre_selections
+                                {
+                                    block.key('genre_selections', genre_selections);
+                                    block.on('update_text');
+                                }
                             :update_text
                                 {
-                                    accuracy = block.key('accuracy').toFixed(2);
-                                    ratio = block.key('ratio').toFixed(2);
-                                    run_length = block.key('run_length').toFixed(2);
-                                    time_training = block.key('time_training').toFixed(3);
-                                    time_inference = block.key('time_inference').toFixed(3);
-                                    block.child('text').html('').html(`Accuracy ${accuracy}%&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio ${ratio}%<br/>${run_length}s total&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${time_training}s learn + ${time_inference}s gen`);
+                                    var text = '';
+                                    var info_state = block.key('info_state');
+                                    if (info_state == 'output') {
+                                        var accuracy = block.key('accuracy').toFixed(2);
+                                        var ratio = block.key('ratio').toFixed(2);
+                                        var run_length = block.key('run_length').toFixed(2);
+                                        var time_training = block.key('time_training').toFixed(3);
+                                        var time_inference = block.key('time_inference').toFixed(3);
+                                        text = `Accuracy ${accuracy}%&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio ${ratio}%<br/>${run_length}s total&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${time_training}s learn + ${time_inference}s gen`;
+                                    } else if (info_state == 'input') {
+                                        var playlist_names = block.key('playlist_names').join(', ');
+                                        var genre_selections = app.main.genre_correction(block.key('genre_selections').join(', '));
+                                        text = `Playlists: ${playlist_names}<br/>Genres: ${genre_selections}`;
+                                    }
+                                    block.child('text').html('').html(text);
                                 }
                             text text
                                 html Accuracy __%&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio __%<br/>__s total&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;__s learn + __s gen
@@ -1254,15 +1325,9 @@ app
                         color white
                         text-align left
         div footer
-            css
-                position fixed
-                bottom 0
-                left 0
-                width 100%
-                height 80px
             block github
                 css
-                    position absolute
+                    position fixed
                     bottom 0
                     right 0
                     height 80px
@@ -1288,7 +1353,7 @@ app
                             opacity 0.2
             block info
                 css
-                    position absolute
+                    position fixed
                     bottom 0
                     left 0
                     height 80px

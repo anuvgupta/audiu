@@ -58,6 +58,9 @@ class Backend():
             inference_ratio = output_json.get('results_ratio', None)
             if inference_ratio != '' and inference_ratio != None:
                 request_data["inference_ratio"] = inference_ratio
+            playlist_names = output_json.get('playlist_names', None)
+            if playlist_names != '' and playlist_names != None:
+                request_data["playlist_names"] = playlist_names
             ts_profile_json = output_json.get('ts_profile', None)
             if ts_profile_json:
                 ts_complete = time.time()
@@ -192,6 +195,7 @@ class Backend():
     # mongo model run record subclass
     class ModelRun(mongoengine.Document):
         model_type = mongoengine.StringField(required=True, unique=False)
+        playlist_names = mongoengine.ListField(required=False, unique=False)
         playlist_selections = mongoengine.ListField(required=True, unique=False)
         genre_selections = mongoengine.ListField(required=True, unique=False)
         inference_output = mongoengine.ListField(required=False, unique=False)
@@ -208,9 +212,11 @@ class Backend():
     def database_new_model_run(self, model_type, playlist_selections, genre_selections, status, ts_created, ts_complete, time_total, time_training, time_inference):
         inference_output = []
         inference_ratio = [0, 0]
+        playlist_names = []
         try:
             new_model_run = Backend.ModelRun(
                 model_type=model_type,
+                playlist_names=playlist_names,
                 playlist_selections=playlist_selections,
                 genre_selections=genre_selections,
                 inference_output=inference_output,
@@ -297,8 +303,8 @@ class Backend():
         model_run.save()
         return True
 
-    # update model run accuracy
-    def database_update_model_run_accuracy(self, run_id, accuracy):
+    # update model run (multiple fields) in database
+    def database_update_model_run(self, run_id, run_status=None, inference_output=None, inference_ratio=None, time_profile=None, accuracy=None, playlist_names=None):
         query = Backend.ModelRun.objects(id__exact=run_id)
         if len(query) < 1:
             return False
@@ -306,8 +312,23 @@ class Backend():
         if not model_run:
             return False
         if str(run_id) != str(model_run.id):
+            print('3')
             return False
-        model_run.accuracy = accuracy
+        if run_status:
+            model_run.status = run_status
+        if inference_output:
+            model_run.inference_output = inference_output
+        if inference_ratio:
+            model_run.inference_ratio = inference_ratio
+        if time_profile:
+            model_run.ts_complete = time_profile["ts_complete"]
+            model_run.time_total = time_profile["ts_total_length"]
+            model_run.time_training = time_profile["ts_training_length"]
+            model_run.time_inference = time_profile["ts_inference_length"]
+        if accuracy != None:
+            model_run.accuracy = accuracy
+        if playlist_names:
+            model_run.playlist_names = playlist_names
         model_run.save()
         return True
 
@@ -411,6 +432,8 @@ class Backend():
                 return (flask.jsonify({'success': False, 'message': 'Server error (failed to retrieve model run record from database).'}), 500)
             model_run_obj = self.database_get_model_run(target_run_id)
             model_type = model_run_obj.model_type
+            playlist_names = model_run_obj.playlist_names
+            genre_selections = model_run_obj.genre_selections
             inference_output = model_run_obj.inference_output
             inference_ratio = model_run_obj.inference_ratio
             inference_output = model_run_obj.inference_output
@@ -427,6 +450,8 @@ class Backend():
                     'run_length': run_length,
                     "model_type": model_type,
                     'ts_profile': ts_profile,
+                    'playlist_names': playlist_names,
+                    'genre_selections': genre_selections,
                     'inference_output': inference_output,
                     'inference_ratio': inference_ratio,
                     'validation_accuracy': validation_accuracy,
@@ -445,29 +470,23 @@ class Backend():
             target_run_id = request_data.get("run_id", "")
             if target_run_id == None or not target_run_id or target_run_id == "" or len(target_run_id) != DB_ID_LEN:
                 return (flask.jsonify({'success': False, 'message': 'Invalid request input data (invalid "run_id").'}), 400)
-            status_update = request_data.get('status', '')
+            status_update = request_data.get('status', None)
+            playlist_names_update = request_data.get('playlist_names', None)
             inference_output_update = request_data.get('inference_output', None)
             inference_accuracy_update = request_data.get('inference_accuracy', None)
             inference_ratio_update = request_data.get('inference_ratio', None)
+            if inference_ratio_update:
+                inference_ratio_update = [inference_ratio_update['hits'], inference_ratio_update['misses']]
             ts_profile_update = request_data.get('ts_profile', None)
-            if status_update != '':
-                update_success = self.database_update_model_run_status(target_run_id, status_update)
-                if not update_success:
-                    return (flask.jsonify({'success': False, 'message': 'Server error (failed to update new model run record status in database).'}), 500)
-            if inference_output_update != '' and inference_output_update != None:
-                if inference_ratio_update != '' and inference_ratio_update != None:
-                    inference_ratio_update = [inference_ratio_update['hits'], inference_ratio_update['misses']]
-                update_success = self.database_update_model_run_output(target_run_id, inference_output_update, inference_ratio_update)
-                if not update_success:
-                    return (flask.jsonify({'success': False, 'message': 'Server error (failed to update new model run record inference output in database).'}), 500)
-            if ts_profile_update != '' and ts_profile_update != None:
-                update_success = self.database_update_model_run_time_profile(target_run_id, ts_profile_update)
-                if not update_success:
-                    return (flask.jsonify({'success': False, 'message': 'Server error (failed to update new model run record time profile in database).'}), 500)
-            if inference_accuracy_update != '' and inference_accuracy_update != None:
-                update_success = self.database_update_model_run_accuracy(target_run_id, inference_accuracy_update)
-                if not update_success:
-                    return (flask.jsonify({'success': False, 'message': 'Server error (failed to update new model run record inference accuracy in database).'}), 500)
+            update_success = self.database_update_model_run(target_run_id,
+                                                            run_status=status_update,
+                                                            inference_output=inference_output_update,
+                                                            inference_ratio=inference_ratio_update,
+                                                            time_profile=ts_profile_update,
+                                                            accuracy=inference_accuracy_update,
+                                                            playlist_names=playlist_names_update)
+            if not update_success:
+                return (flask.jsonify({'success': False, 'message': 'Server error (failed to update new model run record in database).'}), 500)
             # send update notification over socket if available
             if status_update == 'complete':
                 self.socket_notify(target_run_id)

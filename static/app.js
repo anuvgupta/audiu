@@ -5,7 +5,7 @@
 var app = {
     ui: {
         block: null,
-        genre_form_select_mode: 'bubbles',
+        genre_form_select_mode: 'bubbles',  // 'text', 'bubbles'
         readme_text: '',
         readme_html: '',
         display_modal: {

@@ -55,6 +55,7 @@ class Recommendations():
         spotipy_credentials = None
         spotipy_client = None
         sklearn_classifier = None
+        input_playlist_names = None
         dataframes = None
         ts_profile = None
         results_ratio = None
@@ -72,6 +73,7 @@ class Recommendations():
             self.spotipy_credentials = None
             self.sklearn_classifier = None
             self.spotipy_client = None
+            self.input_playlist_names = []
             self.dataframes = None
             self.results_ratio = (0, 0)
             self.ts_profile = {"time_total": 0, "time_training": 0, "time_inference": 0}
@@ -91,9 +93,10 @@ class Recommendations():
             reject_data_limited = self.reject_data if len(self.reject_data) <= playlist_limit else random.sample(self.reject_data, playlist_limit)
             inference_data_limited = self.inference_data if len(self.inference_data) <= playlist_limit else random.sample(self.inference_data, playlist_limit)
             # collect training & inference data track IDs
-            training_target_ids, training_target_songs = self.sp_playlists_to_tracks(target_data_limited)
-            training_reject_ids, training_reject_songs = self.sp_playlists_to_tracks(reject_data_limited)
-            inference_ids, inference_songs = self.sp_playlists_to_tracks(inference_data_limited)
+            training_target_ids, training_target_songs, training_target_playlist_names = self.sp_playlists_to_tracks(target_data_limited)
+            training_reject_ids, training_reject_songs, training_reject_playlist_names = self.sp_playlists_to_tracks(reject_data_limited)
+            inference_ids, inference_songs, inference_playlist_names = self.sp_playlists_to_tracks(inference_data_limited)
+            self.input_playlist_names = training_target_playlist_names
             # collect training & inference data audio features
             training_target_features = self.sp_tracks_to_audio_features(training_target_ids, True)
             training_reject_features = self.sp_tracks_to_audio_features(training_reject_ids, False)
@@ -227,20 +230,24 @@ class Recommendations():
         def sp_playlists_to_tracks(self, target_playlist_ids, output=True):
             all_target_ids = []
             all_target_songs = []
+            all_playlist_names = []
             for target_playlist_id in target_playlist_ids:
-                target_ids, target_songs = self.sp_playlist_to_tracks(target_playlist_id, output)
+                target_ids, target_songs, target_name = self.sp_playlist_to_tracks(target_playlist_id, output)
                 if output:
+                    print(target_name)
                     print(len(target_ids))
                 all_target_ids += target_ids
                 all_target_songs += target_songs
+                all_playlist_names.append(target_name)
             if output:
                 print(len(all_target_ids))
                 print(all_target_ids[0])
-            return (all_target_ids, all_target_songs)
+            return (all_target_ids, all_target_songs, all_playlist_names)
 
         # convert playlist ID to list of track IDs (via spotipy)
         def sp_playlist_to_tracks(self, target_playlist_id, output=True):
             target_playlist = self.sp_playlist_from_id(target_playlist_id)
+            target_playlist_name = target_playlist["name"]
             target_tracks = target_playlist["tracks"]
             target_songs = target_tracks["items"]
             while target_tracks['next']:
@@ -253,7 +260,7 @@ class Recommendations():
                 if target_songs[i] and target_songs[i]['track'] and target_songs[i]['track']['id']:
                     target_ids.append(target_songs[i]['track']['id'])
                     target_songs_final.append(target_songs[i])
-            return (target_ids, target_songs_final)
+            return (target_ids, target_songs_final, target_playlist_name)
 
         # collect spotify audio features from track IDs (via spotipy)
         def sp_tracks_to_audio_features(self, track_ids, target=True, output=True):
@@ -332,10 +339,11 @@ class Recommendations():
         }
         print("[ml] generating recommendations for run {}".format(run_id))
         # print(input_data)
-        results, accuracy, ts_profile, results_ratio = Recommendations.generate_recommendations(run_id, input_data, spotify_credentials)
+        results, accuracy, ts_profile, results_ratio, playlist_names = Recommendations.generate_recommendations(run_id, input_data, spotify_credentials)
         output_data = {
             "run_id": run_id,
             "model_type": input_data["model_type"],
+            "playlist_names": playlist_names,
             "results": results,
             "accuracy": accuracy,
             "results_ratio": {
@@ -375,11 +383,12 @@ class Recommendations():
         accuracy = model.accuracy
         ts_profile = model.ts_profile
         results_ratio = model.results_ratio
+        playlist_names = model.input_playlist_names
         time_total = ts_profile["time_total"]
         time_training = ts_profile["time_training"]
         time_inference = ts_profile["time_inference"]
         # return data
-        return (results, accuracy, (time_total, time_training, time_inference), results_ratio)
+        return (results, accuracy, (time_total, time_training, time_inference), results_ratio, playlist_names)
 
     # generate recommendations (mock method)
     @staticmethod
