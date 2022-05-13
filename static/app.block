@@ -291,6 +291,7 @@ app
                             opacity 0.9
                             color white
                             outline none
+                            text-transform lowercase
                         {
                             if (!util.mobileAndTablet()) {
                                 block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
@@ -649,6 +650,7 @@ app
                             opacity 0.9
                             color white
                             outline none
+                            text-transform lowercase
                         {
                             if (!util.mobileAndTablet()) {
                                 block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
@@ -803,6 +805,7 @@ app
                             opacity 0.9
                             color white
                             outline none
+                            text-transform lowercase
                         {
                             if (!util.mobileAndTablet()) {
                                 block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
@@ -885,6 +888,7 @@ app
                                         block.child('data_out_prep/subtext').on('show');
                                         app.ws.api.subscribe_run_updates(target_run_id);
                                     } else if (data.run_status == "complete") {
+                                        app.ui.block.child('main/content/spacer4').css('display', 'none');
                                         block.child('data_out_prep').css('display', 'none');
                                         block.child('data_out')
                                             .data({
@@ -1236,22 +1240,65 @@ app
                                         var accuracy = block.key('accuracy').toFixed(2);
                                         var ratio = block.key('ratio').toFixed(2);
                                         var run_length = block.key('run_length').toFixed(2);
+                                        var time_total = block.key('time_total').toFixed(3);
                                         var time_training = block.key('time_training').toFixed(3);
                                         var time_inference = block.key('time_inference').toFixed(3);
-                                        text = `Accuracy ${accuracy}%&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio ${ratio}%<br/>${run_length}s total&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${time_training}s learn + ${time_inference}s gen`;
+                                        text = `Accuracy <b>${accuracy}%</b>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio <b>${ratio}%</b><br/>Total&nbsp;<b>${run_length}s</b>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Learning&nbsp;<b>${time_total}s</b>`;
                                     } else if (info_state == 'input') {
                                         var playlist_names = block.key('playlist_names').join(', ');
                                         var genre_selections = app.main.genre_correction(block.key('genre_selections').join(', '));
-                                        text = `Playlists: ${playlist_names}<br/>Genres: ${genre_selections}`;
+                                        text = `Playlists — <b>${playlist_names}</b><br/>Genres — <b>${genre_selections}</b>`;
                                     }
                                     block.child('text').html('').html(text);
                                 }
                             text text
-                                html Accuracy __%&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio __%<br/>__s total&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;__s learn + __s gen
+                                html Accuracy __%&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Ratio __%<br/>__s Total&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;__s Learning
                                 css
                                     color #eee
                                     font-size 14px
                                     letter-spacing 0.7px
+                            div switcher
+                                css
+                                    position absolute
+                                    top 80px
+                                    left 0
+                                    width 100%
+                                    height 37px
+                                button button
+                                    css
+                                        width auto
+                                        height 37px
+                                        background-color rgb(25, 25, 25)
+                                        margin 0 auto
+                                        color #eaeaea
+                                        font-size 11px
+                                        outline none
+                                        border-radius 0 0 5px 5px
+                                        letter-spacing 0.8px
+                                        padding 0 22px
+                                        text-transform lowercase
+                                    html metrics
+                                    {
+                                        block.key('state', 'input');
+                                        if (!util.mobileAndTablet()) {
+                                            block.class('mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored');
+                                        } else block.css('border', 'none');
+                                    }
+                                    :click
+                                        {
+                                            var state = block.key('state');
+                                            if (state == 'input') {
+                                                block.key('state', 'output');
+                                                block.html('selections');
+                                                block.parent(1).key('info_state', 'output').on('update_text');
+                                                setTimeout(app.ui.mdl_lite_inject, 100);
+                                            } else if (state == 'output') {
+                                                block.key('state', 'input');
+                                                block.html('metrics');
+                                                block.parent(1).key('info_state', 'input').on('update_text');
+                                                setTimeout(app.ui.mdl_lite_inject, 100);
+                                            }
+                                        }
                     div spacer2-5
                         css
                             height 10px

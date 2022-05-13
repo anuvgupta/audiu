@@ -42,6 +42,10 @@ var app = {
             var html = converter.makeHtml(markdown);
             return html;
         },
+        mdl_lite_inject: _ => {
+            // enable ripple effect on material-ui buttons after generated and injected by block.js
+            window.componentHandler.upgradeDom();
+        },
         init: (callback) => {
             app.ui.block.fill(document.body);
             Block.queries();
@@ -65,8 +69,7 @@ var app = {
                             app.ui.block.css("opacity", "1");
                             app.ui.block.on("ready");
                             setTimeout(_ => {
-                                // enable ripple effect on material-ui buttons after generated and injected by block.js
-                                window.componentHandler.upgradeDom();
+                                app.ui.mdl_lite_inject();
                             }, 100);
                         }, 100);
                         setTimeout((_) => {

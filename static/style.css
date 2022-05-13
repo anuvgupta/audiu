@@ -107,4 +107,6 @@ div.genre-bubble {
 
 div.genre-bubble button {}
 
-button.styled-like-mdl {}
+button.styled-like-mdl {
+    border: none;
+}
