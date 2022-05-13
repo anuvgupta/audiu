@@ -58,7 +58,7 @@ app
         }
 
     {
-        if (app.main.config.target_run_id && app.main.config.target_run_id != '') {
+        if (!app.main.config.target_run_id || app.main.config.target_run_id == '') {
             window.history.replaceState({
                 origin: `${window.location.origin}`,
                 form_stage: 1,
