@@ -512,3 +512,4 @@ class Backend():
         production = bool(production)
         self.bind_routes()
         self.socket_server.run(self.flask_app, host=self.host, port=self.web_port)
+        print(f'[backend] web server listening on {self.web_port}')
