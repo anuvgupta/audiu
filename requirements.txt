@@ -10,9 +10,9 @@ scikit-learn
 flask-socketio
 flask_mongoengine
 
-#tensorflow-cpu
+tensorflow-cpu
 #tensorflow-gpu
-tensorflow
+#tensorflow
 
-scipy
-numpy
+#scipy
+#numpy
