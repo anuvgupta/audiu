@@ -21,7 +21,7 @@ DATASET = 'dataset.json'
 DB_NAME = 'audiu'
 DB_USER = 'heroku'
 DB_PASS = 'mp6bSDo65euKNbuU'
-DB_HOST = f"mongodb+srv://{DB_USER}:{DB_PASS}@{DB_NAME}.q1toy.mongodb.net/{DB_NAME}?retryWrites=true&w=majority" if PROD else 'localhost'
+DB_HOST = f"mongodb+srv://{DB_USER}:{DB_PASS}@lightsail-cloud.q1toy.mongodb.net/{DB_NAME}?retryWrites=true&w=majority" if PROD else 'localhost'
 DB_PORT = 80 if PROD else 27017
 MODEL_RUN_SRC = 'data/runs'
 MP_QUEUE_SIZE = 15
