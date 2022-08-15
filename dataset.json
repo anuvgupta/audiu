@@ -191,7 +191,6 @@
         "r_n_b_workout": "37i9dQZF1DXa56nCfFVHm7",
         "punk_essentials": "37i9dQZF1DXd6tJtr4qeot",
         "punk_rock_workout": "37i9dQZF1DX0BZrbvIqxCd",
-        "garage_rock_revival": "37i9dQZF1DXbMYUPb05hjJ",
         "covered_in_punk": "37i9dQZF1DXaDzsRodF91I",
         "the_road_to_punk_rock": "37i9dQZF1DWU0FBqUeZYeN",
         "the_punk_list": "37i9dQZF1DXdOAw8BT7AHt",
@@ -221,7 +220,7 @@
         "rock": ["rock_this", "rock_solid", "rock_this_2017", "rock_party", "rock_hard", "one_more_rep", "rock_ballads", "rock_me_up"],
         "metal": ["nu_metal_era","metal_essentials","all_new_metal","old_school_metal","heavy_metal","kickass_metal","metal_empire","progressive_metal", "metal_rewind"],
         "classic rock": ["rock_classics", "classic_rock_workout", "psychedelic_rock", "classic_rock_drive", "80s_hard_rock", "70s_rock_anthems", "raised_on_rock", "old_school_metal","pure_rock_n_roll","the_road_to_punk_rock"],
-        "punk_rock": ["classic_hardcore","punk_essentials","punk_rock_workout","garage_rock_revival","the_punk_list","covered_in_punk"],
+        "punk_rock": ["classic_hardcore","punk_essentials","punk_rock_workout","the_punk_list","covered_in_punk"],
         
         "pop_rock": ["90s_pop_rock","pop_rock", "10s_pop_rock", "00s_pop_rock", "pop_rock_run","pop_rock_shot","fun_run"],
         "pop_punk_emo": ["the_scene","emo_forever", "pop_punk_powerhouses","pop_punks_not_dead","all_things_post","pure_pop_punk"],
